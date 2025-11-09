@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  favoriteIds    String[]  @db.ObjectId
+  accounts       Account[]
+  sessions       Session[]
+  items          Item[]
+  bookings       Booking[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Item {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String    @db.ObjectId
+  title                 String
+  description           String
+  imageSrc              String
+  createdAt             DateTime  @default(now())
+  category              String    // Kamera, Drone, Proyektor, HT, Alat Musik, Sound System, dll.
+  
+  // Kolom spesifikasi barang
+  brand                 String?   // Merek barang (Sony, Canon, DJI, dll.)
+  condition             String?   // Kondisi barang (Baru, Seperti Baru, Bekas - Baik, dll.)
+  specifications        String?   // Kelengkapan barang (2 Baterai, Charger, Tas, dll.)
+  
+  // Kolom harga
+  pricePerDay           Int       // Harga sewa per hari
+  
+  // Kolom NyewaGuard & Rating
+  isNyewaGuardVerified  Boolean   @default(false)  // Status verifikasi awal
+  rating                Float     @default(5.0)    // Rating rata-rata
+  rentCount             Int       @default(0)      // Jumlah penyewaan
+  
+  // Kolom untuk AI verification (simulasi)
+  initialConditionJson  String?   // JSON string deskripsi kondisi awal yang dideteksi AI
+  
+  // Kolom lokasi & logistik
+  latitude              Float?    // Koordinat latitude
+  longitude             Float?    // Koordinat longitude
+  locationValue         String    // Nilai lokasi (contoh: ID-SM untuk Semarang)
+  
+  // Relasi
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings              Booking[]
+}
+
+model Booking {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  itemId          String   @db.ObjectId
+  startDate       DateTime
+  endDate         DateTime
+  totalPrice      Int      // Total biaya sewa
+  serviceFee      Int      @default(0)      // Biaya layanan NyewaYuk
+  depositAmount   Int      @default(0)      // Deposit keamanan (dapat dikembalikan)
+  logisticsMethod String   @default("Self-Pickup") // 'Self-Pickup' atau 'NyewaExpress'
+  logisticsFee    Int      @default(0)      // Biaya logistik (Rp 25.000 untuk NyewaExpress)
+  
+  // Status booking
+  status          String   @default("pending") // pending, confirmed, completed, cancelled
+  
+  // Kolom untuk AI verification saat serah terima
+  pickupConditionJson  String? // JSON kondisi saat pickup (diverifikasi AI)
+  returnConditionJson  String? // JSON kondisi saat return (diverifikasi AI)
+  
+  createdAt       DateTime @default(now())
+  
+  // Relasi
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item            Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
