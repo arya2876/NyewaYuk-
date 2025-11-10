@@ -1,41 +1,44 @@
 import { NextResponse } from "next/server";
-
 import prisma from "@/app/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
-
-  if (!currentUser) {
-    return NextResponse.error();
-  }
+  if (!currentUser) return NextResponse.error();
 
   const body = await request.json();
-  const { listingId, startDate, endDate, totalPrice, serviceFee, depositAmount, logisticsMethod, logisticsFee } = body;
+  const {
+    itemId, // renamed from listingId
+    startDate,
+    endDate,
+    totalPrice,
+    serviceFee,
+    depositAmount,
+    logisticsMethod,
+    logisticsFee,
+  } = body || {};
 
-  if (!listingId || !startDate || !endDate || !totalPrice) {
+  if (!itemId || !startDate || !endDate || !totalPrice) {
     return NextResponse.error();
   }
 
-  const itemAndBooking = await prisma.item.update({
-    where: {
-      id: listingId,
-    },
+  // Create booking directly instead of nested update
+  const booking = await prisma.booking.create({
     data: {
-      bookings: {
-        create: {
-          userId: currentUser.id,
-          startDate,
-          endDate,
-          totalPrice,
-          serviceFee: serviceFee ?? 0,
-          depositAmount: depositAmount ?? 0,
-          logisticsMethod: logisticsMethod ?? 'Self-Pickup',
-          logisticsFee: logisticsFee ?? 0,
-        },
-      },
+      userId: currentUser.id,
+      itemId,
+      startDate,
+      endDate,
+      totalPrice,
+      serviceFee: serviceFee ?? 0,
+      depositAmount: depositAmount ?? 0,
+      logisticsMethod: logisticsMethod ?? 'Self-Pickup',
+      logisticsFee: logisticsFee ?? 0,
+    },
+    include: {
+      item: true,
     },
   });
 
-  return NextResponse.json(itemAndBooking);
+  return NextResponse.json(booking);
 }

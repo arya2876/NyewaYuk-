@@ -79,7 +79,7 @@ const ListingClient: React.FC<ItemClientProps> = ({
             logisticsFee,
             startDate: dateRange.startDate,
             endDate: dateRange.endDate,
-            listingId: item?.id
+            itemId: item?.id
         })
             .then(() => {
                 toast.success('Item ditambahkan ke Checkout');
