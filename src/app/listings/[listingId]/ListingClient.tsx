@@ -22,16 +22,14 @@ const initialDateRange = {
     key: 'selection'
 };
 
-interface ListingClientProps {
+interface ItemClientProps {
     reservations?: SafeReservation[];
-    listing: SafeListing & {
-        user: SafeUser;
-    };
+    item: SafeListing & { user: SafeUser };
     currentUser?: SafeUser | null;
 }
 
-const ListingClient: React.FC<ListingClientProps> = ({
-    listing,
+const ListingClient: React.FC<ItemClientProps> = ({
+    item,
     reservations = [],
     currentUser
 }) => {
@@ -54,12 +52,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }, [reservations]);
 
     const category = useMemo(() => {
-        return categories.find((items) =>
-            items.label === listing.category);
-    }, [listing.category]);
+        return categories.find((c) => c.label === item.category);
+    }, [item.category]);
 
     const [isLoading, setIsLoading] = useState(false);
-    const [totalPrice, setTotalPrice] = useState(listing.price);
+    const [totalPrice, setTotalPrice] = useState((item as any).pricePerDay || 0);
     const [dateRange, setDateRange] = useState<Range>(initialDateRange);
 
     const onCreateReservation = useCallback(() => {
@@ -72,12 +69,12 @@ const ListingClient: React.FC<ListingClientProps> = ({
             totalPrice,
             startDate: dateRange.startDate,
             endDate: dateRange.endDate,
-            listingId: listing?.id
+            listingId: item?.id
         })
             .then(() => {
-                toast.success('Listing reserved!');
+                toast.success('Item ditambahkan ke Checkout');
                 setDateRange(initialDateRange);
-                router.push('/trips');
+                router.push('/checkout');
             })
             .catch(() => {
                 toast.error('Something went wrong.');
@@ -89,7 +86,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
         [
             totalPrice,
             dateRange,
-            listing?.id,
+            item?.id,
             router,
             currentUser,
             loginModal
@@ -102,7 +99,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 dateRange.startDate
             );
 
-            const pricePerDay = (listing as any).pricePerDay || listing.price || 0;
+            const pricePerDay = (item as any).pricePerDay || 0;
 
             if (dayCount && pricePerDay) {
                 setTotalPrice(dayCount * pricePerDay);
@@ -110,7 +107,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 setTotalPrice(pricePerDay);
             }
         }
-    }, [dateRange, listing]);
+    }, [dateRange, item]);
 
     return (
         <Container>
@@ -122,10 +119,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
             >
                 <div className="flex flex-col gap-6">
                     <ListingHead
-                        title={listing.title}
-                        imageSrc={listing.imageSrc}
-                        locationValue={listing.locationValue}
-                        id={listing.id}
+                        title={item.title}
+                        imageSrc={item.imageSrc}
+                        locationValue={item.locationValue}
+                        id={item.id}
                         currentUser={currentUser}
                     />
                     <div
@@ -138,16 +135,17 @@ const ListingClient: React.FC<ListingClientProps> = ({
             "
                     >
                         <ListingInfo
-                            user={listing.user}
+                            user={item.user}
                             category={category}
-                            description={listing.description}
-                            roomCount={listing.roomCount}
-                            guestCount={listing.guestCount}
-                            bathroomCount={listing.bathroomCount}
-                            locationValue={listing.locationValue}
-                            brand={(listing as any).brand}
-                            condition={(listing as any).condition}
-                            specifications={(listing as any).specifications}
+                            description={item.description}
+                            roomCount={(item as any).roomCount}
+                            guestCount={(item as any).guestCount}
+                            bathroomCount={(item as any).bathroomCount}
+                            locationValue={item.locationValue}
+                            brand={(item as any).brand}
+                            condition={(item as any).condition}
+                            specifications={(item as any).specifications}
+                            isNyewaGuardVerified={(item as any).isNyewaGuardVerified}
                         />
                         <div
                             className="
@@ -158,7 +156,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
               "
                         >
                             <ListingReservation
-                                price={(listing as any).pricePerDay || listing.price || 0}
+                                price={(item as any).pricePerDay || 0}
                                 totalPrice={totalPrice}
                                 onChangeDate={(value) => setDateRange(value)}
                                 dateRange={dateRange}

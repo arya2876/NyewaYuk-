@@ -16,9 +16,9 @@ const Map = dynamic(() => import('../Map'), {
 interface ListingInfoProps {
     user: SafeUser,
     description: string;
-    guestCount: number;
-    roomCount: number;
-    bathroomCount: number;
+    guestCount?: number;
+    roomCount?: number;
+    bathroomCount?: number;
     category: {
         icon: any;
         label: string;
@@ -61,11 +61,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                         </span>
                     </div>
                 </div>
-                <div className="flex flex-row flex-wrap items-center gap-4 font-light text-neutral-500 text-sm">
-                    <span>{guestCount} tamu</span>
-                    <span>{roomCount} kamar</span>
-                    <span>{bathroomCount} kamar mandi</span>
-                </div>
+                {typeof guestCount === 'number' || typeof roomCount === 'number' || typeof bathroomCount === 'number' ? (
+                    <div className="flex flex-row flex-wrap items-center gap-4 font-light text-neutral-500 text-sm">
+                        {typeof guestCount === 'number' && <span>{guestCount} tamu</span>}
+                        {typeof roomCount === 'number' && <span>{roomCount} kamar</span>}
+                        {typeof bathroomCount === 'number' && <span>{bathroomCount} kamar mandi</span>}
+                    </div>
+                ) : null}
             </div>
             <hr />
 

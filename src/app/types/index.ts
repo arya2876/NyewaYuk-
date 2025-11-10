@@ -1,17 +1,18 @@
-import { Listing, Reservation, User } from "@prisma/client";
+import { Item, Booking, User } from "@prisma/client";
 
-export type SafeListing = Omit<Listing, "createdAt"> & {
+// Keep legacy name SafeListing for compatibility, but map to Item
+export type SafeListing = Omit<Item, "createdAt"> & {
   createdAt: string;
 };
 
 export type SafeReservation = Omit<
-  Reservation,
-  "createdAt" | "startDate" | "endDate" | "listing"
+  Booking,
+  "createdAt" | "startDate" | "endDate" | "item"
 > & {
   createdAt: string;
   startDate: string;
   endDate: string;
-  listing: SafeListing;
+  item: SafeListing;
 };
 
 export type SafeUser = Omit<
