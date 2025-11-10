@@ -65,8 +65,18 @@ const ListingClient: React.FC<ItemClientProps> = ({
         }
         setIsLoading(true);
 
+        const pricePerDay = (item as any).pricePerDay || 0;
+        const serviceFee = Math.round((totalPrice || 0) * 0.1);
+        const depositAmount = Math.round(pricePerDay * 0.5);
+        const logisticsMethod = 'Self-Pickup';
+        const logisticsFee = 0;
+
         axios.post('/api/reservations', {
             totalPrice,
+            serviceFee,
+            depositAmount,
+            logisticsMethod,
+            logisticsFee,
             startDate: dateRange.startDate,
             endDate: dateRange.endDate,
             listingId: item?.id
@@ -86,7 +96,7 @@ const ListingClient: React.FC<ItemClientProps> = ({
         [
             totalPrice,
             dateRange,
-            item?.id,
+            item,
             router,
             currentUser,
             loginModal
