@@ -5,6 +5,8 @@ export const metadata = {
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
+import HeroCarousel from "./components/HeroCarousel";
+import Categories from "@/app/components/navbar/Categories";
 
 import getItems, {
   IItemsParams
@@ -30,10 +32,12 @@ const Home = async ({ searchParams }: HomeProps) => {
 
   return (
     <ClientOnly>
-      <Container>
-        <div className="pt-20 flex flex-col items-center">
-          <span className="text-3xl font-bold text-primary mb-8">NyewaYuk</span>
-        </div>
+      <div className="pt-2">
+        <Container>
+          <HeroCarousel />
+        </Container>
+        <Categories />
+        <Container>
         <div
           className="
             pt-4
@@ -55,7 +59,8 @@ const Home = async ({ searchParams }: HomeProps) => {
             />
           ))}
         </div>
-      </Container>
+        </Container>
+      </div>
     </ClientOnly>
   )
 }

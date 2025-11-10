@@ -83,23 +83,15 @@ const Categories = () => {
 
     return (
         <Container>
-            <div
-                className="
-          pt-4
-          flex 
-          flex-row 
-          items-center 
-          justify-between
-          overflow-x-auto
-        "
-            >
+            <div className="pt-6 flex flex-row items-start gap-4 overflow-x-auto scrollbar-none" role="list">
                 {categories.map((item) => (
-                    <CategoryBox
-                        key={item.label}
-                        label={item.label}
-                        icon={item.icon}
-                        selected={category === item.label}
-                    />
+                    <div key={item.label} role="listitem">
+                        <CategoryBox
+                            label={item.label}
+                            icon={item.icon}
+                            selected={category === item.label}
+                        />
+                    </div>
                 ))}
             </div>
         </Container>

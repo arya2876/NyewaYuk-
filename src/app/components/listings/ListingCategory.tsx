@@ -1,9 +1,8 @@
 'use client';
-
-import { IconType } from "react-icons";
+import { ComponentType } from 'react';
 
 interface CategoryViewProps {
-    icon: IconType,
+    icon: ComponentType<{ size?: number; className?: string }>,
     label: string,
     description: string
 }

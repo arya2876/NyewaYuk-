@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from "next/dynamic";
-import { IconType } from "react-icons";
 import { Package, Tag, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 import useCountries from "@/app/hooks/useCountries";
@@ -21,7 +20,7 @@ interface ListingInfoProps {
     roomCount: number;
     bathroomCount: number;
     category: {
-        icon: IconType,
+        icon: any; // accept lucide or react-icons component signature
         label: string;
         description: string;
     } | undefined
