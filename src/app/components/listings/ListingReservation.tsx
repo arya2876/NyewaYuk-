@@ -7,9 +7,9 @@ import Button from "../Button";
 import Calendar from "../inputs/Calendar";
 
 interface ListingReservationProps {
-    price: number;
-    dateRange: Range,
-    totalPrice: number;
+    price: number; // pricePerDay
+    dateRange: Range;
+    totalPrice: number; // computed total (pricePerDay * days)
     onChangeDate: (value: Range) => void;
     onSubmit: () => void;
     disabled?: boolean;
@@ -32,8 +32,8 @@ const ListingReservation: React.FC<
     // Hitung biaya-biaya
     const safePrice = typeof price === 'number' && !isNaN(price) ? price : 0;
     const safeTotalPrice = typeof totalPrice === 'number' && !isNaN(totalPrice) ? totalPrice : 0;
-    const serviceFee = Math.round(safeTotalPrice * 0.1); // 10% dari harga sewa
-    const securityDeposit = Math.round(safePrice * 0.5); // 50% dari harga per hari
+    const serviceFee = Math.round(safeTotalPrice * 0.1); // 10% dari biaya sewa total
+    const securityDeposit = Math.round(safePrice * 0.5); // 50% dari harga harian sebagai deposit
     const deliveryFee = deliveryOption === 'delivery' ? 25000 : 0;
     const grandTotal = safeTotalPrice + serviceFee + securityDeposit + deliveryFee;
 
@@ -107,7 +107,7 @@ const ListingReservation: React.FC<
                 <div className="p-4">
                     <Button
                         disabled={disabled}
-                        label="Reserve"
+                        label="Checkout"
                         onClick={onSubmit}
                     />
                 </div>

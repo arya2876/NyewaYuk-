@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import { MapPin } from 'lucide-react';
 
 import useCountries from "@/app/hooks/useCountries";
 import { SafeUser } from "@/app/types";
@@ -31,8 +32,14 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         <>
             <Heading
                 title={title}
-                subtitle={`${location?.region}, ${location?.label}`}
             />
+            {/* Lokasi */}
+            <div className="mt-2 mb-4 flex items-center gap-2 text-neutral-600">
+                <MapPin size={18} className="text-neutral-700" />
+                <span className="text-sm">
+                    <span className="font-semibold">Lokasi:</span> {location?.region}, {location?.label}
+                </span>
+            </div>
             <div className="
           w-full
           h-[60vh]
