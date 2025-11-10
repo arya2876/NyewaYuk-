@@ -6,9 +6,9 @@ import {
     Drone, 
     Projector, 
     Radio, 
-    Music, 
-    Speaker, 
-    PartyPopper, 
+    Music,
+    Speaker,
+    PartyPopper,
     Bike, 
     Gamepad2, 
     MoreHorizontal 
@@ -83,7 +83,17 @@ const Categories = () => {
 
     return (
         <Container>
-            <div className="pt-6 flex flex-row items-start gap-4 overflow-x-auto scrollbar-none" role="list">
+            <div
+                className="
+          pt-6
+          flex flex-row items-center 
+          gap-4 sm:gap-6 md:gap-8
+          overflow-x-auto sm:overflow-visible
+          justify-start sm:justify-center
+          px-1
+        "
+                role="list"
+            >
                 {categories.map((item) => (
                     <div key={item.label} role="listitem">
                         <CategoryBox
