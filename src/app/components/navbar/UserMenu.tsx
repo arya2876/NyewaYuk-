@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
+import useRentModal from "@/app/hooks/useRentModal";
 import { SafeUser } from "@/app/types";
 
 import MenuItem from "./MenuItem";
@@ -23,6 +24,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
     const loginModal = useLoginModal();
     const registerModal = useRegisterModal();
+    const rentModal = useRentModal();
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -34,9 +36,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
         if (!currentUser) {
             return loginModal.onOpen();
         }
-        // Redirect authenticated users to add new item page (owner flow)
-        router.push('/barang-saya/new');
-    }, [loginModal, currentUser, router]);
+        // Authenticated users: open rent modal (Sewakan Barang flow)
+        rentModal.onOpen();
+    }, [loginModal, rentModal, currentUser]);
 
     return (
         <div className="relative">
