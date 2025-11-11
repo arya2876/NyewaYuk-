@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { X as ClearIcon, Search as SearchIcon } from 'lucide-react';
+import { X as ClearIcon, Search as SearchIcon, Loader2 as LoaderIcon } from 'lucide-react';
 
 const Search = () => {
     const router = useRouter();
@@ -89,7 +89,7 @@ const Search = () => {
     }, [router, searchQuery]);
 
     return (
-        <div className="w-full">
+    <div className="w-full">
             <form onSubmit={handleSearch} className="w-full">
                 <div className="relative">
                     <input
@@ -115,9 +115,16 @@ const Search = () => {
                     <button
                         type="submit"
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-ny-primary text-white rounded-full hover:opacity-95"
-                        aria-label="Cari"
+                        aria-label={isAutoSearching ? 'Mencari…' : 'Cari'}
                     >
-                        <SearchIcon size={18} />
+                        {isAutoSearching ? (
+                            <LoaderIcon size={18} className="animate-spin" />
+                        ) : (
+                            <SearchIcon size={18} />
+                        )}
+                        <span className="sr-only" aria-live="polite">
+                            {isAutoSearching ? 'Mencari…' : 'Siap mencari'}
+                        </span>
                     </button>
                 </div>
                 <div className="mt-1 text-[11px] text-neutral-500 hidden md:block">
