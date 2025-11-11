@@ -19,6 +19,7 @@ import CategoryInput from '../inputs/CategoryInput';
 import CountrySelect from "../inputs/CountrySelect";
 import { categories } from '../navbar/Categories';
 import ImageUpload from '../inputs/ImageUpload';
+import MultiImageUpload from '../inputs/MultiImageUpload';
 import Input from '../inputs/Input';
 import Textarea from '../inputs/Textarea';
 import Heading from '../Heading';
@@ -59,7 +60,7 @@ const RentModal = () => {
             completeness: '',
             condition: '',
             imageSrc: '',
-            guardImages: '',
+            guardImages: [],
             price: 1,
             title: '',
             description: '',
@@ -74,7 +75,7 @@ const RentModal = () => {
     const titleVal = watch('title');
     const descriptionVal = watch('description');
     const imageSrc = watch('imageSrc');
-    const guardImages = watch('guardImages');
+    const guardImages: string[] = watch('guardImages');
 
     const Map = useMemo(() => dynamic(() => import('../Map'), {
         ssr: false
@@ -259,12 +260,15 @@ const RentModal = () => {
             <div className="flex flex-col gap-8">
                 <Heading
                     title="Verifikasi Kondisi Awal (NyewaGuard AI)"
-                    subtitle="Unggah foto close-up bagian rentan rusak (lensa, layar, bodi)."
+                    subtitle="Unggah 2-5 foto close-up bagian rentan rusak (lensa, layar, bodi)."
                 />
-                <ImageUpload
-                    onChange={(value) => setCustomValue('guardImages', value)}
-                    value={guardImages}
+                <MultiImageUpload
+                    images={guardImages}
+                    max={5}
+                    onAdd={(url) => setCustomValue('guardImages', [...guardImages, url])}
+                    onRemove={(url) => setCustomValue('guardImages', guardImages.filter(i => i !== url))}
                 />
+                <p className="text-xs text-neutral-500">Foto-foto ini membantu AI mendeteksi kondisi awal untuk perlindungan sengketa.</p>
             </div>
         )
     }

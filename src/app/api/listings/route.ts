@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     description,
     imageSrc,
     category,
-    // Deprecated fields removed: roomCount, bathroomCount, guestCount
     location,
     price,
     brand,
@@ -39,10 +38,10 @@ export async function POST(request: Request) {
     }
   });
 
-  // Normalize guard image (single string or first of array)
-  const guardImage: string | undefined = typeof guardImages === 'string'
-    ? guardImages
-    : (Array.isArray(guardImages) && guardImages.length > 0 ? guardImages[0] : undefined);
+  // Normalize guard images (array of strings)
+  const guardImagesArray: string[] = Array.isArray(guardImages)
+    ? guardImages.filter((g) => typeof g === 'string' && g.length > 0)
+    : (typeof guardImages === 'string' && guardImages.length > 0 ? [guardImages] : []);
 
   const item = await prisma.item.create({
     data: {
@@ -55,7 +54,9 @@ export async function POST(request: Request) {
       brand: brand ?? null,
       condition: condition ?? null,
       specifications: completeness ?? null,
-      initialConditionJson: guardImage ? JSON.stringify({ firstImage: guardImage }) : null,
+      initialConditionJson: guardImagesArray.length
+        ? JSON.stringify({ images: guardImagesArray, firstImage: guardImagesArray[0] })
+        : null,
       userId: currentUser.id,
       latitude: location.latlng?.[0] || 0,
       longitude: location.latlng?.[1] || 0,
