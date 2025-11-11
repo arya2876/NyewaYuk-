@@ -5,7 +5,7 @@ import {
     FieldValues,
     UseFormRegister
 } from "react-hook-form";
-import { BiRupee } from "react-icons/bi";
+// Currency icon replaced with text prefix 'Rp' for Indonesian Rupiah.
 
 interface InputProps {
     id: string;
@@ -31,15 +31,7 @@ const Input: React.FC<InputProps> = ({
     return (
         <div className="w-full relative">
             {formatPrice && (
-                <BiRupee
-                    size={24}
-                    className="
-            text-neutral-700
-            absolute
-            top-5
-            left-2
-          "
-                />
+                <span className="text-neutral-700 absolute top-5 left-2 text-base font-semibold">Rp</span>
             )}
             <input
                 id={id}

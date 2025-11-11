@@ -22,13 +22,16 @@ import ImageUpload from '../inputs/ImageUpload';
 import Input from '../inputs/Input';
 import Heading from '../Heading';
 
+// TODO: Copilot, ubah semua judul modal 'Airbnb your home!' menjadi 'Sewakan Barang Anda di NyewaYuk'
+// Added NyewaGuard AI verification step and replaced property-centric basics with technical specs fields.
 enum STEPS {
     CATEGORY = 0,
     LOCATION = 1,
-    INFO = 2,
+    SPECS = 2,
     IMAGES = 3,
-    DESCRIPTION = 4,
-    PRICE = 5,
+    NYEWAGUARD = 4,
+    DESCRIPTION = 5,
+    PRICE = 6,
 }
 
 const RentModal = () => {
@@ -51,10 +54,11 @@ const RentModal = () => {
         defaultValues: {
             category: '',
             location: null,
-            guestCount: 1,
-            roomCount: 1,
-            bathroomCount: 1,
+            brand: '',
+            completeness: '',
+            condition: '',
             imageSrc: '',
+            guardImages: [],
             price: 1,
             title: '',
             description: '',
@@ -63,14 +67,15 @@ const RentModal = () => {
 
     const location = watch('location');
     const category = watch('category');
-    const guestCount = watch('guestCount');
-    const roomCount = watch('roomCount');
-    const bathroomCount = watch('bathroomCount');
+    const brand = watch('brand');
+    const completeness = watch('completeness');
+    const condition = watch('condition');
     const imageSrc = watch('imageSrc');
+    const guardImages = watch('guardImages');
 
     const Map = useMemo(() => dynamic(() => import('../Map'), {
         ssr: false
-    }), [location]);
+    }), []);
 
 
     const setCustomValue = (id: string, value: any) => {
@@ -114,25 +119,23 @@ const RentModal = () => {
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.PRICE) {
-            return 'Create'
+            return 'Publikasikan Barang'
         }
-
-        return 'Next'
+        return 'Berikutnya'
     }, [step]);
 
     const secondaryActionLabel = useMemo(() => {
         if (step === STEPS.CATEGORY) {
             return undefined
         }
-
-        return 'Back'
+        return 'Kembali'
     }, [step]);
 
     let bodyContent = (
         <div className="flex flex-col gap-8">
             <Heading
-                title="Which of these best describes your place?"
-                subtitle="Pick a category"
+                title="Kategori Barang Anda"
+                subtitle="Pilih kategori yang paling sesuai"
             />
             <div
                 className="
@@ -163,8 +166,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Where is your place located?"
-                    subtitle="Bantu tamu menemukan Anda!"
+                    title="Di Mana Lokasi Pengambilan Barang?"
+                    subtitle="Pilih lokasi COD atau alamat Anda. Kami hanya menampilkan area terdekat."
                 />
                 <CountrySelect
                     value={location}
@@ -175,33 +178,43 @@ const RentModal = () => {
         );
     }
 
-    if (step === STEPS.INFO) {
+    if (step === STEPS.SPECS) {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Share some basics about your place"
-                    subtitle="What amenitis do you have?"
+                    title="Tambahkan Spesifikasi Teknis"
+                    subtitle="Detail membantu penyewa mengambil keputusan"
                 />
-                <Counter
-                    onChange={(value) => setCustomValue('guestCount', value)}
-                    value={guestCount}
-                    title="Tamu"
-                    subtitle="Berapa banyak tamu yang Anda izinkan?"
+                <Input
+                    id="brand"
+                    label="Merek (Misal: Sony, Canon, DJI)"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
                 />
-                <hr />
-                <Counter
-                    onChange={(value) => setCustomValue('roomCount', value)}
-                    value={roomCount}
-                    title="Rooms"
-                    subtitle="How many rooms do you have?"
+                <Input
+                    id="completeness"
+                    label="Kelengkapan (Misal: 2 Baterai, Tas, Lensa Kit)"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
                 />
-                <hr />
-                <Counter
-                    onChange={(value) => setCustomValue('bathroomCount', value)}
-                    value={bathroomCount}
-                    title="Bathrooms"
-                    subtitle="How many bathrooms do you have?"
-                />
+                <div>
+                    <label htmlFor="condition" className="text-sm font-medium mb-2 block">Kondisi</label>
+                    <select
+                        id="condition"
+                        className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ny-primary"
+                        value={condition}
+                        onChange={(e) => setCustomValue('condition', e.target.value)}
+                    >
+                        <option value="">Pilih Kondisi</option>
+                        <option value="Baru">Baru</option>
+                        <option value="Bekas (Sangat Baik)">Bekas (Sangat Baik)</option>
+                        <option value="Bekas (Baik)">Bekas (Baik)</option>
+                    </select>
+                </div>
             </div>
         )
     }
@@ -210,8 +223,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Add a photo of your place"
-                    subtitle="Tunjukkan kepada tamu seperti apa tempat Anda!"
+                    title="Unggah Foto Barang Anda"
+                    subtitle="Unggah foto yang jelas dari berbagai sisi."
                 />
                 <ImageUpload
                     onChange={(value) => setCustomValue('imageSrc', value)}
@@ -221,16 +234,31 @@ const RentModal = () => {
         )
     }
 
+    if (step === STEPS.NYEWAGUARD) {
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                <Heading
+                    title="Verifikasi Kondisi Awal (NyewaGuard AI)"
+                    subtitle="Unggah foto close-up bagian rentan rusak (lensa, layar, bodi)."
+                />
+                <ImageUpload
+                    onChange={(value) => setCustomValue('guardImages', value)}
+                    value={guardImages}
+                />
+            </div>
+        )
+    }
+
     if (step === STEPS.DESCRIPTION) {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="How would you describe your place?"
-                    subtitle="Short and sweet works best!"
+                    title="Jelaskan Barang Anda"
+                    subtitle="Gunakan deskripsi singkat namun informatif"
                 />
                 <Input
                     id="title"
-                    label="Title"
+                    label="Nama Barang (Misal: Kamera Sony A7III + Lensa Kit)"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
@@ -239,7 +267,7 @@ const RentModal = () => {
                 <hr />
                 <Input
                     id="description"
-                    label="Description"
+                    label="Deskripsi Singkat (Misal: Jelaskan kondisi dan apa yang akan didapat penyewa)"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
@@ -253,12 +281,12 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Now, set your price"
-                    subtitle="How much do you charge per night?"
+                    title="Tentukan Harga Sewa"
+                    subtitle="Tentukan harga sewa per hari"
                 />
                 <Input
                     id="price"
-                    label="Price"
+                    label="Harga (Rp)"
                     formatPrice
                     type="number"
                     disabled={isLoading}
@@ -274,7 +302,7 @@ const RentModal = () => {
         <Modal
             disabled={isLoading}
             isOpen={rentModal.isOpen}
-            title="Airbnb your home!"
+            title="Sewakan Barang Anda di NyewaYuk"
             actionLabel={actionLabel}
             onSubmit={handleSubmit(onSubmit)}
             secondaryActionLabel={secondaryActionLabel}
