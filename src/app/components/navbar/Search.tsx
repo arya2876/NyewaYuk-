@@ -9,12 +9,27 @@ const Search = () => {
     const params = useSearchParams();
     const initialQ = useMemo(() => params?.get('q') ?? '', [params]);
     const [searchQuery, setSearchQuery] = useState<string>(initialQ);
+    const [placeholder, setPlaceholder] = useState<string>('Cari kamera, drone, atau HT...');
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         // Keep input in sync if URL changes externally
         setSearchQuery(initialQ);
     }, [initialQ]);
+
+    // Dynamic placeholder with shortcut hint on wider screens
+    useEffect(() => {
+        const compute = () => {
+            if (window.innerWidth >= 768) {
+                setPlaceholder('Cari kamera, drone, atau HT... (Ctrl+K)');
+            } else {
+                setPlaceholder('Cari kamera, drone, atau HT...');
+            }
+        };
+        compute();
+        window.addEventListener('resize', compute);
+        return () => window.removeEventListener('resize', compute);
+    }, []);
 
     const handleSearch = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -54,7 +69,7 @@ const Search = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari kamera, drone, atau HT..."
+                        placeholder={placeholder}
                         className="w-full px-4 py-2 md:py-2.5 lg:py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-ny-primary text-sm md:text-base"
                         aria-label="Cari barang untuk disewa"
                     />
@@ -63,7 +78,8 @@ const Search = () => {
                             type="button"
                             onClick={() => { setSearchQuery(''); router.push('/'); }}
                             className="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-neutral-500 hover:text-neutral-700"
-                            aria-label="Bersihkan pencarian"
+                            aria-label="Bersihkan pencarian (Esc)"
+                            title="Bersihkan (Esc)"
                         >
                             <ClearIcon size={16} />
                         </button>
@@ -75,6 +91,9 @@ const Search = () => {
                     >
                         <SearchIcon size={18} />
                     </button>
+                </div>
+                <div className="mt-1 text-[11px] text-neutral-500 hidden md:block">
+                    Pintasan: <kbd className="font-semibold">Ctrl</kbd>+<kbd className="font-semibold">K</kbd> fokus • <kbd className="font-semibold">Esc</kbd> bersihkan
                 </div>
             </form>
         </div>
