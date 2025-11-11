@@ -92,6 +92,8 @@ export default async function getItems(params: IItemsParams) {
         { description: { contains: term, mode: 'insensitive' } },
         { brand: { contains: term, mode: 'insensitive' } },
         { category: { contains: term, mode: 'insensitive' } },
+        { specifications: { contains: term, mode: 'insensitive' } },
+        { condition: { contains: term, mode: 'insensitive' } },
       ];
     }
 
