@@ -12,7 +12,7 @@ const NavBar: React.FC<NavBarProps> = ({
     currentUser,
 }) => {
     return (
-        <div className="fixed w-full bg-white z-10 shadow-sm">
+        <div className="sticky top-0 w-full z-20 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-sm">
             <div
                 className="
           py-4 
