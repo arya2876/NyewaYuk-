@@ -9,6 +9,7 @@ export interface IItemsParams {
   endDate?: string;
   minPrice?: number;
   maxPrice?: number;
+  q?: string;
 }
 
 export default async function getItems(params: IItemsParams) {
@@ -22,6 +23,7 @@ export default async function getItems(params: IItemsParams) {
       endDate,
       minPrice,
       maxPrice,
+      q,
     } = params;
 
     let query: any = {};
@@ -80,6 +82,17 @@ export default async function getItems(params: IItemsParams) {
           },
         },
       };
+    }
+
+    // Basic search filter for q across title, description, brand, and category
+    if (q && q.trim().length > 0) {
+      const term = q.trim();
+      query.OR = [
+        { title: { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+        { brand: { contains: term, mode: 'insensitive' } },
+        { category: { contains: term, mode: 'insensitive' } },
+      ];
     }
 
     const items = await prisma.item.findMany({
