@@ -95,6 +95,14 @@ const RentModal = () => {
     }
 
     const onNext = () => {
+        // Require at least 2 guard images before proceeding past NyewaGuard step
+        if (step === STEPS.NYEWAGUARD) {
+            const imgs: string[] = (watch('guardImages') || []) as string[];
+            if (!imgs || imgs.length < 2) {
+                toast.error('Unggah minimal 2 foto untuk verifikasi NyewaGuard.');
+                return;
+            }
+        }
         setStep((value) => value + 1);
     }
 

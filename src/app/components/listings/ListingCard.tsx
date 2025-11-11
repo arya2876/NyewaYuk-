@@ -98,6 +98,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
         );
     };
 
+    // Parse NyewaGuard images count from initialConditionJson
+    const guardCount = useMemo(() => {
+        try {
+            const raw = (data as any).initialConditionJson as string | undefined;
+            if (!raw) return 0;
+            const parsed = JSON.parse(raw);
+            const imgs: string[] = Array.isArray(parsed?.images) ? parsed.images : [];
+            return imgs.length;
+        } catch {
+            return 0;
+        }
+    }, [data]);
+
     return (
         <Link
             href={`/listings/${data.id}`}
@@ -125,6 +138,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         src={data.imageSrc}
                         alt="Listing"
                     />
+                    {guardCount > 0 && (
+                        <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur px-2 py-1 rounded-full shadow text-ny-primary text-xs font-semibold">
+                            <ShieldCheck size={14} />
+                            <span>NyewaGuard {guardCount}</span>
+                        </div>
+                    )}
                     <div className="
             absolute
             top-3
