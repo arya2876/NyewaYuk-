@@ -82,10 +82,9 @@ const Categories = () => {
     }
 
     return (
-        <Container>
+        <Container className="py-10">
             <div
                 className="
-          pt-6
           flex flex-row items-center 
           gap-4 sm:gap-6 md:gap-8
           overflow-x-auto sm:overflow-visible

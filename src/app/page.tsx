@@ -33,11 +33,12 @@ const Home = async ({ searchParams }: HomeProps) => {
   return (
     <ClientOnly>
       <div className="pt-2">
-        <Container>
+        <Container className="py-12">
           <HeroCarousel />
         </Container>
         <Categories />
-        <Container>
+        <Container className="py-12">
+        <h2 className="text-3xl font-extrabold tracking-tight mb-6">Rekomendasi Terdekat</h2>
         <div
           className="
             pt-4
