@@ -135,6 +135,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 </div>
                 {/* Judul */}
                 <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{renderHighlighted(data.title)}</h3>
+                {/* Deskripsi singkat */}
+                {Boolean((data as any).description) && (
+                    <p className="text-sm text-neutral-600 line-clamp-2">
+                        {renderHighlighted((data as any).description as string)}
+                    </p>
+                )}
                 {/* Lokasi atau kategori */}
                 <div className="text-sm text-neutral-500">
                     {renderHighlighted(

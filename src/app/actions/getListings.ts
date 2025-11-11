@@ -104,7 +104,36 @@ export default async function getItems(params: IItemsParams) {
       },
     });
 
-    const safeItems = items.map((item) => ({
+    // Ranking: prioritize matches in title/brand over other fields
+    let ranked = items;
+    if (q && q.trim().length > 0) {
+      const term = q.trim().toLowerCase();
+      const scoreFor = (it: any) => {
+        const title = (it.title || '').toLowerCase();
+        const brand = (it.brand || '').toLowerCase();
+        const category = (it.category || '').toLowerCase();
+        const specs = (it.specifications || '').toLowerCase();
+        const desc = (it.description || '').toLowerCase();
+
+        let s = 0;
+        // startsWith is strongest
+        if (title.startsWith(term)) s += 100;
+        if (brand.startsWith(term)) s += 90;
+        // contains has lower weight
+        if (title.includes(term)) s += 60;
+        if (brand.includes(term)) s += 50;
+        if (category.includes(term)) s += 30;
+        if (specs.includes(term)) s += 20;
+        if (desc.includes(term)) s += 10;
+        // recency slight boost
+        s += Math.min(5, Math.max(0, (Date.now() - new Date(it.createdAt).getTime()) / (1000 * 3600 * 24) < 7 ? 5 : 0));
+        return s;
+      };
+
+      ranked = [...items].sort((a, b) => scoreFor(b) - scoreFor(a));
+    }
+
+    const safeItems = ranked.map((item) => ({
       ...item,
       createdAt: item.createdAt.toISOString(),
     }));
