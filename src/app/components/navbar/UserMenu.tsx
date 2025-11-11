@@ -43,23 +43,12 @@ const UserMenu: React.FC<UserMenuProps> = ({
     return (
         <div className="relative">
             <div className="flex flex-row items-center gap-3">
-                <div
+                <button
                     onClick={onRent}
-                    className="
-            hidden
-            md:block
-            text-sm 
-            font-semibold 
-            py-3 
-            px-4 
-            rounded-full 
-            hover:bg-neutral-100 
-            transition 
-            cursor-pointer
-          "
+                    className="hidden md:inline-flex items-center text-sm font-semibold py-2.5 px-4 rounded-full bg-ny-primary text-white hover:opacity-95 transition"
                 >
-                    Airbnb your home
-                </div>
+                    Mulai Sewa
+                </button>
                 <div
                     onClick={toggleOpen}
                     className="
