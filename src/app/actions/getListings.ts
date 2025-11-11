@@ -30,10 +30,11 @@ export default async function getItems(params: IItemsParams) {
   } = params;
 
     let query: any = {};
-    // Exclude soft-deleted items by default
-    if (!params.includeDeleted) {
-      query.isDeleted = { not: true } as any;
-    }
+    // Exclude soft-deleted items by default (requires regenerated Prisma client)
+    // Temporarily disabled in the DB filter to avoid runtime error when Prisma Client isn't regenerated.
+    // if (!params.includeDeleted) {
+    //   query.isDeleted = { not: true } as any;
+    // }
 
     // Filter berdasarkan userId (pemilik barang)
     if (userId) {
@@ -114,6 +115,14 @@ export default async function getItems(params: IItemsParams) {
       where: query,
       orderBy,
     });
+
+    // Fallback client-side filter for soft delete if field is present
+    if (!params.includeDeleted) {
+      // Note: If Prisma Client hasn't been regenerated, isDeleted may be undefined on results
+      // and soft-deleted items may still appear until prisma generate is run and the server restarted.
+      // This is a non-breaking fallback to keep the app running.
+      (items as any) = (items as any[]).filter((it: any) => it?.isDeleted !== true);
+    }
 
   // Ranking: fuzzy-ish scoring & prioritize title/brand; light fallback if query short
     let ranked = items;
