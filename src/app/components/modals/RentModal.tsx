@@ -9,7 +9,7 @@ import {
 } from 'react-hook-form';
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import useRentModal from '@/app/hooks/useRentModal';
 
@@ -20,6 +20,7 @@ import CountrySelect from "../inputs/CountrySelect";
 import { categories } from '../navbar/Categories';
 import ImageUpload from '../inputs/ImageUpload';
 import Input from '../inputs/Input';
+import Textarea from '../inputs/Textarea';
 import Heading from '../Heading';
 
 // TODO: Copilot, ubah semua judul modal 'Airbnb your home!' menjadi 'Sewakan Barang Anda di NyewaYuk'
@@ -70,6 +71,8 @@ const RentModal = () => {
     const brand = watch('brand');
     const completeness = watch('completeness');
     const condition = watch('condition');
+    const titleVal = watch('title');
+    const descriptionVal = watch('description');
     const imageSrc = watch('imageSrc');
     const guardImages = watch('guardImages');
 
@@ -130,6 +133,23 @@ const RentModal = () => {
         }
         return 'Kembali'
     }, [step]);
+
+    // Auto-suggest description from provided fields when empty
+    const suggestedDescription = useMemo(() => {
+        const parts: string[] = [];
+        if (titleVal) parts.push(`Barang: ${titleVal}`);
+        if (brand) parts.push(`Merek: ${brand}`);
+        if (condition) parts.push(`Kondisi: ${condition}`);
+        if (completeness) parts.push(`Kelengkapan: ${completeness}`);
+        return parts.join('\n');
+    }, [titleVal, brand, condition, completeness]);
+
+    useEffect(() => {
+        if (!descriptionVal && suggestedDescription) {
+            setCustomValue('description', suggestedDescription);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [suggestedDescription]);
 
     let bodyContent = (
         <div className="flex flex-col gap-8">
@@ -265,13 +285,14 @@ const RentModal = () => {
                     required
                 />
                 <hr />
-                <Input
+                <Textarea
                     id="description"
-                    label="Deskripsi Singkat (Misal: Jelaskan kondisi dan apa yang akan didapat penyewa)"
+                    label="Deskripsi Singkat (Jelaskan kondisi dan apa yang didapat penyewa)"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
                     required
+                    rows={5}
                 />
             </div>
         )
