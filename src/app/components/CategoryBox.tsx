@@ -46,12 +46,12 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
     return (
         <button
             onClick={handleClick}
-            className={`group flex flex-col items-center justify-start gap-2 min-w-[88px] px-2 py-3 focus:outline-none`}
+            className={`group flex flex-col items-center justify-start gap-2 min-w-[88px] px-2 py-3 focus:outline-none border-b-2 ${selected ? 'border-ny-primary' : 'border-transparent hover:border-ny-primary'}`}
         >
-            <div className={`rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-all duration-200 border ${selected ? 'bg-ny-accent/10 border-ny-accent text-ny-accent shadow-md' : 'bg-neutral-100 border-neutral-200 text-ny-accent group-hover:bg-ny-accent/10 group-hover:shadow-md'}`}>
+            <div className={`rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-all duration-200 border ${selected ? 'bg-neutral-100 border-neutral-300 text-ny-primary shadow-sm' : 'bg-neutral-50 border-neutral-200 text-gray-500 group-hover:text-gray-900'}`}>
                 <Icon size={28} className="md:w-7 md:h-7" />
             </div>
-            <span className={`text-xs font-medium text-center ${selected ? 'text-neutral-800' : 'text-neutral-600 group-hover:text-neutral-800'}`}>{label}</span>
+            <span className={`text-xs font-medium text-center ${selected ? 'text-ny-primary' : 'text-gray-500 group-hover:text-gray-900'}`}>{label}</span>
         </button>
     );
 }
