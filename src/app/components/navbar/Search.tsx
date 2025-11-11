@@ -1,126 +1,47 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
-import { BiSearch } from 'react-icons/bi';
-import { differenceInDays } from 'date-fns';
-
-import useSearchModal from '@/app/hooks/useSearchModal';
-import useCountries from '@/app/hooks/useCountries';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
+import { Search as SearchIcon } from 'lucide-react';
 
 const Search = () => {
-    const searchModal = useSearchModal();
+    const router = useRouter();
     const params = useSearchParams();
-    const { getByValue } = useCountries();
+    const initialQ = useMemo(() => params?.get('q') ?? '', [params]);
+    const [searchQuery, setSearchQuery] = useState<string>(initialQ);
 
-    const locationValue = params?.get('locationValue');
-    const startDate = params?.get('startDate');
-    const endDate = params?.get('endDate');
-    const guestCount = params?.get('guestCount');
-
-    const locationLabel = useMemo(() => {
-        if (locationValue) {
-            return getByValue(locationValue as string)?.label;
+    const handleSearch = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const q = searchQuery.trim();
+        if (!q) {
+            router.push('/');
+            return;
         }
-
-        return 'Anywhere';
-    }, [locationValue, getByValue]);
-
-    const durationLabel = useMemo(() => {
-        if (startDate && endDate) {
-            const start = new Date(startDate as string);
-            const end = new Date(endDate as string);
-            let diff = differenceInDays(end, start);
-
-            if (diff === 0) {
-                diff = 1;
-            }
-
-            return `${diff} Days`;
-        }
-
-        return 'Any Week'
-    }, [startDate, endDate]);
-
-    const guestLabel = useMemo(() => {
-        if (guestCount) {
-            return `${guestCount} Tamu`;
-        }
-
-        return 'Tambah Tamu';
-    }, [guestCount]);
+        const url = `/?q=${encodeURIComponent(q)}`;
+        router.push(url);
+    }, [router, searchQuery]);
 
     return (
-        <div
-            onClick={searchModal.onOpen}
-            className="
-        border-[1px] 
-        w-full 
-        md:w-auto 
-        py-2 
-        rounded-full 
-        shadow-sm 
-        hover:shadow-md 
-        transition 
-        cursor-pointer
-      "
-        >
-            <div
-                className="
-          flex 
-          flex-row 
-          items-center 
-          justify-between
-        "
-            >
-                <div
-                    className="
-            text-sm 
-            font-semibold 
-            px-6
-          "
-                >
-                    {locationLabel}
-                </div>
-                <div
-                    className="
-            hidden 
-            sm:block 
-            text-sm 
-            font-semibold 
-            px-6 
-            border-x-[1px] 
-            flex-1 
-            text-center
-          "
-                >
-                    {durationLabel}
-                </div>
-                <div
-                    className="
-            text-sm 
-            pl-6 
-            pr-2 
-            text-gray-600 
-            flex 
-            flex-row 
-            items-center 
-            gap-3
-          "
-                >
-                    <div className="hidden sm:block">{guestLabel}</div>
-                    <div
-                        className="
-              p-2 
-              bg-rose-500 
-              rounded-full 
-              text-white
-            "
+        <div className="w-full">
+            <form onSubmit={handleSearch} className="w-full">
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Cari kamera, drone, atau HT..."
+                        className="w-full px-4 py-2 md:py-2.5 lg:py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-ny-primary text-sm md:text-base"
+                        aria-label="Cari barang untuk disewa"
+                    />
+                    <button
+                        type="submit"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-ny-primary text-white rounded-full hover:opacity-95"
+                        aria-label="Cari"
                     >
-                        <BiSearch size={18} />
-                    </div>
+                        <SearchIcon size={18} />
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }
