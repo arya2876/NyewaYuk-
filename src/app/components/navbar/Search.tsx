@@ -1,14 +1,19 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { X as ClearIcon, Search as SearchIcon } from 'lucide-react';
 
 const Search = () => {
     const router = useRouter();
     const params = useSearchParams();
     const initialQ = useMemo(() => params?.get('q') ?? '', [params]);
     const [searchQuery, setSearchQuery] = useState<string>(initialQ);
+
+    useEffect(() => {
+        // Keep input in sync if URL changes externally
+        setSearchQuery(initialQ);
+    }, [initialQ]);
 
     const handleSearch = useCallback((e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -33,6 +38,16 @@ const Search = () => {
                         className="w-full px-4 py-2 md:py-2.5 lg:py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-ny-primary text-sm md:text-base"
                         aria-label="Cari barang untuk disewa"
                     />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => { setSearchQuery(''); router.push('/'); }}
+                            className="absolute right-10 top-1/2 -translate-y-1/2 p-1.5 text-neutral-500 hover:text-neutral-700"
+                            aria-label="Bersihkan pencarian"
+                        >
+                            <ClearIcon size={16} />
+                        </button>
+                    )}
                     <button
                         type="submit"
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-ny-primary text-white rounded-full hover:opacity-95"

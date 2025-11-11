@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const options = [
@@ -15,8 +16,22 @@ export default function SortSelect() {
   const current = params?.get("sort") ?? "relevance";
   const q = params?.get("q") ?? "";
 
+  // If no sort in URL but a saved preference exists, apply it.
+  useEffect(() => {
+    if (!params) return;
+    const hasSort = params.get("sort");
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('ny_sort') : null;
+    if (!hasSort && saved) {
+      const usp = new URLSearchParams(params.toString());
+      usp.set("sort", saved);
+      if (q) usp.set("q", q);
+      router.replace(`/?${usp.toString()}`);
+    }
+  }, [params, q, router]);
+
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
+    try { localStorage.setItem('ny_sort', value); } catch {}
     const usp = new URLSearchParams(params?.toString() || "");
     usp.set("sort", value);
     if (q) usp.set("q", q);
