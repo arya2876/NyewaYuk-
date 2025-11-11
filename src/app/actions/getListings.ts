@@ -10,6 +10,7 @@ export interface IItemsParams {
   minPrice?: number;
   maxPrice?: number;
   q?: string;
+  sort?: 'relevance' | 'recent' | 'priceAsc' | 'priceDesc';
 }
 
 export default async function getItems(params: IItemsParams) {
@@ -24,6 +25,7 @@ export default async function getItems(params: IItemsParams) {
       minPrice,
       maxPrice,
       q,
+      sort,
     } = params;
 
     let query: any = {};
@@ -97,16 +99,23 @@ export default async function getItems(params: IItemsParams) {
       ];
     }
 
+    // Determine base ordering for non-relevance sorts
+    let orderBy: any = { createdAt: 'desc' };
+    if (sort === 'priceAsc') orderBy = { pricePerDay: 'asc' };
+    if (sort === 'priceDesc') orderBy = { pricePerDay: 'desc' };
+    if (sort === 'recent') orderBy = { createdAt: 'desc' };
+
     const items = await prisma.item.findMany({
       where: query,
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy,
     });
 
     // Ranking: prioritize matches in title/brand over other fields
     let ranked = items;
-    if (q && q.trim().length > 0) {
+    if (sort !== 'relevance' && sort) {
+      // For explicit non-relevance sorts we skip custom ranking
+      ranked = items;
+    } else if (q && q.trim().length > 0) {
       const term = q.trim().toLowerCase();
       const scoreFor = (it: any) => {
         const title = (it.title || '').toLowerCase();

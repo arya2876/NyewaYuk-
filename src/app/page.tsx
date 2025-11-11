@@ -7,6 +7,7 @@ import ListingCard from "@/app/components/listings/ListingCard";
 import EmptyState from "@/app/components/EmptyState";
 import HeroCarousel from "./components/HeroCarousel";
 import Categories from "@/app/components/navbar/Categories";
+import SortSelect from "./components/SortSelect";
 
 import getItems, {
   IItemsParams
@@ -38,7 +39,10 @@ const Home = async ({ searchParams }: HomeProps) => {
         </Container>
         <Categories />
         <Container className="py-12">
-        <h2 className="text-3xl font-extrabold tracking-tight mb-6">Rekomendasi Terdekat</h2>
+        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+          <h2 className="text-3xl font-extrabold tracking-tight">Rekomendasi Terdekat</h2>
+          <SortSelect />
+        </div>
         <div
           className="
             pt-4
