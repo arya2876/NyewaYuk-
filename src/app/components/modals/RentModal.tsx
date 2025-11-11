@@ -59,7 +59,7 @@ const RentModal = () => {
             completeness: '',
             condition: '',
             imageSrc: '',
-            guardImages: [],
+            guardImages: '',
             price: 1,
             title: '',
             description: '',
