@@ -28,6 +28,15 @@ export async function POST(request: Request) {
   if (!title || !description || !category || !location?.value || !price) {
     return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
   }
+  // Title length constraints
+  if (typeof title !== 'string' || title.trim().length < 3 || title.trim().length > 120) {
+    return NextResponse.json({ message: 'Title must be 3-120 characters' }, { status: 400 });
+  }
+  // Price must be positive integer
+  const priceInt = parseInt(price, 10);
+  if (!Number.isFinite(priceInt) || priceInt <= 0) {
+    return NextResponse.json({ message: 'Price must be a positive number' }, { status: 400 });
+  }
   if (!brand || !condition) {
     return NextResponse.json({ message: 'Brand and condition are required' }, { status: 400 });
   }
@@ -50,7 +59,7 @@ export async function POST(request: Request) {
       imageSrc,
       category,
       locationValue: location.value,
-      pricePerDay: parseInt(price, 10),
+      pricePerDay: priceInt,
       brand: brand ?? null,
       condition: condition ?? null,
       specifications: completeness ?? null,

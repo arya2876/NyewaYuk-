@@ -31,6 +31,19 @@ export async function PATCH(request: Request, { params }: { params: IParams }) {
     guardImages,
   } = body;
 
+  // Validation
+  if (title !== undefined) {
+    if (typeof title !== 'string' || title.trim().length < 3 || title.trim().length > 120) {
+      return NextResponse.json({ message: 'Title must be 3-120 characters' }, { status: 400 });
+    }
+  }
+  if (pricePerDay !== undefined) {
+    const p = Number(pricePerDay);
+    if (!Number.isFinite(p) || p <= 0) {
+      return NextResponse.json({ message: 'Price must be a positive number' }, { status: 400 });
+    }
+  }
+
   // Normalize guard images to array
   const guardImagesArray: string[] = Array.isArray(guardImages)
     ? guardImages.filter((g) => typeof g === 'string' && g.length > 0)

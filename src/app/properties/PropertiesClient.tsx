@@ -30,7 +30,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 
         axios.delete(`/api/listings/${id}`)
             .then(() => {
-                toast.success('Listing deleted');
+                toast.success('Listing moved to trash');
                 router.refresh();
             })
             .catch((error) => {
@@ -39,6 +39,15 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
             .finally(() => {
                 setDeletingId('');
             })
+    }, [router]);
+
+    const onRestore = useCallback((id: string) => {
+        axios.patch(`/api/listings/${id}`)
+            .then(() => {
+                toast.success('Listing restored');
+                router.refresh();
+            })
+            .catch(() => toast.error('Failed to restore'));
     }, [router]);
 
 
@@ -87,7 +96,30 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             >
                                 Edit
                             </button>
+                            {listing.isDeleted ? (
+                                <button
+                                    className="px-3 py-1 text-xs rounded-full bg-green-600 text-white shadow hover:bg-green-500"
+                                    onClick={() => onRestore(listing.id)}
+                                    title="Restore"
+                                >
+                                    Restore
+                                </button>
+                            ) : (
+                                <button
+                                    className="px-3 py-1 text-xs rounded-full bg-red-600 text-white shadow hover:bg-red-500"
+                                    onClick={() => onDelete(listing.id)}
+                                    title="Trash"
+                                    disabled={deletingId === listing.id}
+                                >
+                                    Trash
+                                </button>
+                            )}
                         </div>
+                        {listing.isDeleted && (
+                            <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center text-sm font-semibold text-neutral-700">
+                                <span>Trashed</span>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

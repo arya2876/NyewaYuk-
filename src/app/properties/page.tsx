@@ -17,7 +17,7 @@ const PropertiesPage = async () => {
         />
     }
 
-    const listings = await getItems({ userId: currentUser.id });
+    const listings = await getItems({ userId: currentUser.id, includeDeleted: true });
 
     if (listings.length === 0) {
         return (

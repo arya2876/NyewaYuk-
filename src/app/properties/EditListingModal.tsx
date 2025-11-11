@@ -8,6 +8,7 @@ import Modal from '@/app/components/modals/Modal';
 import Input from '@/app/components/inputs/Input';
 import Textarea from '@/app/components/inputs/Textarea';
 import MultiImageUpload from '@/app/components/inputs/MultiImageUpload';
+import { Loader2 } from 'lucide-react';
 
 interface EditListingModalProps {
   listing: SafeListing;
@@ -156,7 +157,19 @@ const EditListingModal: React.FC<EditListingModalProps> = ({ listing, isOpen, on
       title="Edit Listing"
       actionLabel="Simpan"
       onSubmit={onSubmit}
-      body={body}
+      body={
+        <div className="relative">
+          {body}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-md">
+              <div className="flex items-center gap-2 text-neutral-700">
+                <Loader2 className="animate-spin" />
+                <span>Menyimpan…</span>
+              </div>
+            </div>
+          )}
+        </div>
+      }
     />
   );
 };

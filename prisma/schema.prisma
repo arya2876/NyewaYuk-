@@ -69,6 +69,7 @@ model Item {
   imageSrc              String
   createdAt             DateTime  @default(now())
   category              String    // Kamera, Drone, Proyektor, HT, Alat Musik, Sound System, dll.
+  isDeleted             Boolean   @default(false) // Soft delete flag
   
   // Kolom spesifikasi barang
   brand                 String?   // Merek barang (Sony, Canon, DJI, dll.)

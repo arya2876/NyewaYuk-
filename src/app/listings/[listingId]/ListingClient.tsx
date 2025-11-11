@@ -239,6 +239,8 @@ const ListingClient: React.FC<ItemClientProps> = ({
                                 onSubmit={onCreateReservation}
                                 disabled={isLoading}
                                 disabledDates={disabledDates}
+                                itemLat={(item as any).latitude || null}
+                                itemLng={(item as any).longitude || null}
                             />
                         </div>
                     </div>

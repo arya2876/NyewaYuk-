@@ -1,7 +1,7 @@
 'use client';
 
 import { Range } from "react-date-range";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Button from "../Button";
 import Calendar from "../inputs/Calendar";
@@ -14,6 +14,8 @@ interface ListingReservationProps {
     onSubmit: (logistics: { method: string; fee: number; serviceFee: number; depositAmount: number; }) => void;
     disabled?: boolean;
     disabledDates: Date[];
+    itemLat?: number | null;
+    itemLng?: number | null;
 }
 
 const ListingReservation: React.FC<
@@ -25,16 +27,19 @@ const ListingReservation: React.FC<
     onChangeDate,
     onSubmit,
     disabled,
-    disabledDates
+    disabledDates,
+    itemLat,
+    itemLng
 }) => {
     const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
+    const [dynamicDeliveryFee, setDynamicDeliveryFee] = useState<number>(0);
     
     // Hitung biaya-biaya
     const safePrice = typeof price === 'number' && !isNaN(price) ? price : 0;
     const safeTotalPrice = typeof totalPrice === 'number' && !isNaN(totalPrice) ? totalPrice : 0;
     const serviceFee = Math.round(safeTotalPrice * 0.1); // 10% dari biaya sewa total
     const securityDeposit = Math.round(safePrice * 0.5); // 50% dari harga harian sebagai deposit
-    const deliveryFee = deliveryOption === 'delivery' ? 25000 : 0;
+    const deliveryFee = deliveryOption === 'delivery' ? (dynamicDeliveryFee || 25000) : 0;
     const grandTotal = safeTotalPrice + serviceFee + securityDeposit + deliveryFee;
 
     const handleCheckout = () => {
@@ -46,6 +51,44 @@ const ListingReservation: React.FC<
             depositAmount: securityDeposit,
         });
     }
+
+    // Compute dynamic logistics fee when user selects delivery
+    useEffect(() => {
+        if (deliveryOption !== 'delivery') {
+            setDynamicDeliveryFee(0);
+            return;
+        }
+        if (!itemLat || !itemLng) {
+            setDynamicDeliveryFee(25000);
+            return;
+        }
+        const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            const toRad = (d: number) => d * Math.PI / 180;
+            const R = 6371; // km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        };
+        // Try geolocation
+        if (typeof window !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const distKm = haversine(itemLat, itemLng, latitude, longitude);
+                    // Fee policy: base 25k up to 10km, +2.5k per km thereafter (ceil)
+                    const extraKm = Math.max(0, Math.ceil(distKm - 10));
+                    const fee = 25000 + (extraKm * 2500);
+                    setDynamicDeliveryFee(fee);
+                },
+                () => setDynamicDeliveryFee(25000),
+                { enableHighAccuracy: false, timeout: 4000 }
+            );
+        } else {
+            setDynamicDeliveryFee(25000);
+        }
+    }, [deliveryOption, itemLat, itemLng]);
 
     return (
             <div
@@ -107,7 +150,7 @@ const ListingReservation: React.FC<
                             />
                             <div className="flex flex-col">
                                 <span className="text-sm font-medium">Antar-Jemput NyewaExpress</span>
-                                <span className="text-xs text-neutral-500">Rp 25.000</span>
+                                <span className="text-xs text-neutral-500">{deliveryOption === 'delivery' ? `Rp ${deliveryFee.toLocaleString('id-ID')}` : 'Rp 25.000 (perkiraan)'}</span>
                             </div>
                         </label>
                     </div>

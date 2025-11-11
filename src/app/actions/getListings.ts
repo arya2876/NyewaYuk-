@@ -11,6 +11,7 @@ export interface IItemsParams {
   maxPrice?: number;
   q?: string;
   sort?: 'relevance' | 'recent' | 'priceAsc' | 'priceDesc';
+  includeDeleted?: boolean;
 }
 
 export default async function getItems(params: IItemsParams) {
@@ -26,9 +27,13 @@ export default async function getItems(params: IItemsParams) {
       maxPrice,
       q,
       sort,
-    } = params;
+  } = params;
 
     let query: any = {};
+    // Exclude soft-deleted items by default
+    if (!params.includeDeleted) {
+      query.isDeleted = { not: true } as any;
+    }
 
     // Filter berdasarkan userId (pemilik barang)
     if (userId) {
@@ -120,12 +125,15 @@ export default async function getItems(params: IItemsParams) {
       const termLen = term.length;
 
       // Precompute a lightweight trigram / substring set for fuzzy contains
+      const cache = new Map<string, Set<string>>();
       const fuzzify = (s: string) => {
+        if (cache.has(s)) return cache.get(s)!;
         const str = s.toLowerCase();
         const grams = new Set<string>();
         for (let i = 0; i < str.length - 2; i++) {
           grams.add(str.slice(i, i + 3));
         }
+        cache.set(s, grams);
         return grams;
       };
 
