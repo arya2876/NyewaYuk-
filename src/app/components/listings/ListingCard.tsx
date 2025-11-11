@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
@@ -58,7 +59,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         }
 
         // Support both old 'price' and new 'pricePerDay' fields
-        return (data as any).pricePerDay || data.price || 0;
+    return (data as any).pricePerDay || 0;
     }, [reservation, data]);
 
     const reservationDate = useMemo(() => {
@@ -73,14 +74,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }, [reservation]);
 
     return (
-        <div
-            onClick={() => router.push(`/listings/${data.id}`)}
-            className="col-span-1 cursor-pointer group"
+        <Link
+            href={`/listings/${data.id}`}
+            className="col-span-1 group block rounded-xl border border-neutral-100 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
         >
-            <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col gap-3 w-full p-3">
                 <div
                     className="
-            aspect-square 
+            aspect-video 
             w-full 
             relative 
             overflow-hidden 
@@ -110,24 +111,23 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         />
                     </div>
                 </div>
-                <div className="font-semibold text-lg">
-                    {location?.region}, {location?.label}
-                </div>
-                <div className="font-light text-neutral-500">
-                    {reservationDate || data.category}
-                </div>
-                <div className="flex flex-row items-center gap-1">
-                    <div className="font-semibold">
+                {/* Judul */}
+                <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{data.title}</h3>
+                {/* Lokasi atau kategori */}
+                <div className="text-sm text-neutral-500">{reservationDate || `${location?.region}, ${location?.label}` || data.category}</div>
+                {/* Harga */}
+                <div className="flex flex-row items-baseline gap-2">
+                    <div className="text-lg font-extrabold text-ny-primary">
                         Rp {(price || 0).toLocaleString('id-ID')}
                     </div>
                     {!reservation && (
-                        <div className="font-light">/ hari</div>
+                        <div className="text-sm font-medium text-neutral-600">/ hari</div>
                     )}
                 </div>
                 
                 {/* NyewaGuard Badge */}
                 {(data as any).isNyewaGuardVerified && (
-                    <div className="flex flex-row items-center gap-1 text-green-600 text-sm">
+                    <div className="flex flex-row items-center gap-1 text-ny-accent text-sm mt-1">
                         <ShieldCheck size={16} />
                         <span className="font-medium">NyewaGuard Terverifikasi</span>
                     </div>
@@ -151,15 +151,17 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 </div>
 
                 {onAction && actionLabel && (
-                    <Button
-                        disabled={disabled}
-                        small
-                        label={actionLabel}
-                        onClick={handleCancel}
-                    />
+                    <div onClick={(e) => e.preventDefault()}>
+                        <Button
+                            disabled={disabled}
+                            small
+                            label={actionLabel}
+                            onClick={handleCancel}
+                        />
+                    </div>
                 )}
             </div>
-        </div>
+        </Link>
     );
 }
 
