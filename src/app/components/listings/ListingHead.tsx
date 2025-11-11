@@ -14,7 +14,8 @@ interface ListingHeadProps {
     locationValue: string;
     imageSrc: string;
     id: string;
-    currentUser?: SafeUser | null
+    currentUser?: SafeUser | null;
+    onImageClick?: () => void;
 }
 
 const ListingHead: React.FC<ListingHeadProps> = ({
@@ -22,7 +23,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
     locationValue,
     imageSrc,
     id,
-    currentUser
+    currentUser,
+    onImageClick
 }) => {
     const { getByValue } = useCountries();
 
@@ -40,20 +42,11 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     <span className="font-semibold">Lokasi:</span> {location?.region}, {location?.label}
                 </span>
             </div>
-            <div className="
-          w-full
-          h-[60vh]
-          overflow-hidden 
-          rounded-xl
-          relative
-        "
+            <div
+                className="w-full h-[60vh] overflow-hidden rounded-xl relative cursor-zoom-in"
+                onClick={() => onImageClick?.()}
             >
-                <Image
-                    src={imageSrc}
-                    fill
-                    className="object-cover w-full"
-                    alt="Image"
-                />
+                <Image src={imageSrc} fill className="object-cover w-full" alt="Image" />
                 <div
                     className="
             absolute

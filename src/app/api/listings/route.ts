@@ -57,6 +57,8 @@ export async function POST(request: Request) {
       initialConditionJson: guardImagesArray.length
         ? JSON.stringify({ images: guardImagesArray, firstImage: guardImagesArray[0] })
         : null,
+      // Auto mark verified if we have at least 3 guard images
+      isNyewaGuardVerified: guardImagesArray.length >= 3,
       userId: currentUser.id,
       latitude: location.latlng?.[0] || 0,
       longitude: location.latlng?.[1] || 0,

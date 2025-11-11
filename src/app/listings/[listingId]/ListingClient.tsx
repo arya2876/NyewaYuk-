@@ -131,6 +131,37 @@ const ListingClient: React.FC<ItemClientProps> = ({
         } catch { return []; }
     }, [item]);
 
+    const [activeImage, setActiveImage] = useState<string | null>(null);
+    const heroImage = activeImage || item.imageSrc;
+    const allImages: string[] = useMemo(() => {
+        const arr = [item.imageSrc, ...guardImages];
+        return Array.from(new Set(arr));
+    }, [item.imageSrc, guardImages]);
+
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState<number>(0);
+
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const idx = allImages.findIndex((u) => u === heroImage);
+        setLightboxIndex(idx >= 0 ? idx : 0);
+    }, [lightboxOpen, heroImage, allImages]);
+
+    const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+    const prevImage = useCallback(() => setLightboxIndex((i) => (i - 1 + allImages.length) % allImages.length), [allImages.length]);
+    const nextImage = useCallback(() => setLightboxIndex((i) => (i + 1) % allImages.length), [allImages.length]);
+
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'ArrowRight') nextImage();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [lightboxOpen, closeLightbox, prevImage, nextImage]);
+
     return (
         <Container>
             <div
@@ -142,10 +173,11 @@ const ListingClient: React.FC<ItemClientProps> = ({
                 <div className="flex flex-col gap-6">
                     <ListingHead
                         title={item.title}
-                        imageSrc={item.imageSrc}
+                        imageSrc={heroImage}
                         locationValue={item.locationValue}
                         id={item.id}
                         currentUser={currentUser}
+                        onImageClick={() => setLightboxOpen(true)}
                     />
                     {guardImages.length > 0 && (
                         <div className="mt-2">
@@ -155,10 +187,16 @@ const ListingClient: React.FC<ItemClientProps> = ({
                             </h4>
                             <div className="flex gap-3 overflow-x-auto pb-2">
                                 {guardImages.map((url) => (
-                                    <div key={url} className="relative w-28 h-28 flex-shrink-0 rounded-md overflow-hidden border border-neutral-200 group">
+                                    <button
+                                        key={url}
+                                        type="button"
+                                        onClick={() => setActiveImage(url)}
+                                        className="relative w-28 h-28 flex-shrink-0 rounded-md overflow-hidden border border-neutral-200 group focus:outline-none focus:ring-2 focus:ring-ny-primary"
+                                        title="Jadikan gambar utama"
+                                    >
                                         <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} />
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         </div>
@@ -205,6 +243,20 @@ const ListingClient: React.FC<ItemClientProps> = ({
                         </div>
                     </div>
                 </div>
+                {lightboxOpen && (
+                    <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center" onClick={closeLightbox}>
+                        <div className="relative w-[90vw] h-[80vh]" onClick={(e) => e.stopPropagation()}>
+                            <Image src={allImages[lightboxIndex]} alt="Preview" fill style={{ objectFit: 'contain' }} />
+                            <button type="button" className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full px-3 py-1 text-sm font-semibold" onClick={closeLightbox}>Tutup</button>
+                            {allImages.length > 1 && (
+                                <>
+                                    <button type="button" className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full px-3 py-2 text-sm font-bold" onClick={prevImage}>{'<'}</button>
+                                    <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full px-3 py-2 text-sm font-bold" onClick={nextImage}>{'>'}</button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </Container>
     );
