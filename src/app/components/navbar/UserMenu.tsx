@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
-import useRentModal from "@/app/hooks/useRentModal";
 import { SafeUser } from "@/app/types";
 
 import MenuItem from "./MenuItem";
@@ -24,7 +23,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
     const loginModal = useLoginModal();
     const registerModal = useRegisterModal();
-    const rentModal = useRentModal();
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -32,22 +30,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
         setIsOpen((value) => !value);
     }, []);
 
-    const onRent = useCallback(() => {
+    const onPrimaryCta = useCallback(() => {
         if (!currentUser) {
             return loginModal.onOpen();
         }
-
-        rentModal.onOpen();
-    }, [loginModal, rentModal, currentUser]);
+        // Redirect authenticated users to add new item page (owner flow)
+        router.push('/barang-saya/new');
+    }, [loginModal, currentUser, router]);
 
     return (
         <div className="relative">
             <div className="flex flex-row items-center gap-3">
                 <button
-                    onClick={onRent}
+                    onClick={onPrimaryCta}
                     className="hidden md:inline-flex items-center text-sm font-semibold py-2.5 px-4 rounded-full bg-ny-primary text-white hover:opacity-95 transition"
                 >
-                    Mulai Sewa
+                    Sewakan Barang
                 </button>
                 <div
                     onClick={toggleOpen}
