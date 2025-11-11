@@ -60,17 +60,17 @@ const ListingClient: React.FC<ItemClientProps> = ({
     const [totalPrice, setTotalPrice] = useState((item as any).pricePerDay || 0);
     const [dateRange, setDateRange] = useState<Range>(initialDateRange);
 
-    const onCreateReservation = useCallback(() => {
+    const onCreateReservation = useCallback((logistics: { method: string; fee: number; serviceFee: number; depositAmount: number; }) => {
         if (!currentUser) {
             return loginModal.onOpen();
         }
         setIsLoading(true);
 
         const pricePerDay = (item as any).pricePerDay || 0;
-        const serviceFee = Math.round((totalPrice || 0) * 0.1);
-        const depositAmount = Math.round(pricePerDay * 0.5);
-        const logisticsMethod = 'Self-Pickup';
-        const logisticsFee = 0;
+        const serviceFee = logistics?.serviceFee ?? Math.round((totalPrice || 0) * 0.1);
+        const depositAmount = logistics?.depositAmount ?? Math.round(pricePerDay * 0.5);
+        const logisticsMethod = logistics?.method || 'Self-Pickup';
+        const logisticsFee = logistics?.fee || 0;
 
         axios.post('/api/reservations', {
             totalPrice,

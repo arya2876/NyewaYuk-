@@ -11,7 +11,7 @@ interface ListingReservationProps {
     dateRange: Range;
     totalPrice: number; // computed total (pricePerDay * days)
     onChangeDate: (value: Range) => void;
-    onSubmit: () => void;
+    onSubmit: (logistics: { method: string; fee: number; serviceFee: number; depositAmount: number; }) => void;
     disabled?: boolean;
     disabledDates: Date[];
 }
@@ -36,6 +36,16 @@ const ListingReservation: React.FC<
     const securityDeposit = Math.round(safePrice * 0.5); // 50% dari harga harian sebagai deposit
     const deliveryFee = deliveryOption === 'delivery' ? 25000 : 0;
     const grandTotal = safeTotalPrice + serviceFee + securityDeposit + deliveryFee;
+
+    const handleCheckout = () => {
+        const logisticsMethod = deliveryOption === 'delivery' ? 'NyewaExpress' : 'Self-Pickup';
+        onSubmit({
+            method: logisticsMethod,
+            fee: deliveryFee,
+            serviceFee,
+            depositAmount: securityDeposit,
+        });
+    }
 
     return (
             <div
@@ -108,7 +118,7 @@ const ListingReservation: React.FC<
                     <Button
                         disabled={disabled}
                         label="Checkout"
-                        onClick={onSubmit}
+                        onClick={handleCheckout}
                     />
                 </div>
                 <hr />

@@ -10,6 +10,7 @@ import { SafeListing, SafeUser } from "@/app/types";
 import Heading from "@/app/components/Heading";
 import Container from "@/app/components/Container";
 import ListingCard from "@/app/components/listings/ListingCard";
+import EditListingModal from "./EditListingModal";
 
 interface PropertiesClientProps {
     listings: SafeListing[],
@@ -22,6 +23,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 }) => {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState('');
+    const [editing, setEditing] = useState<SafeListing | null>(null);
 
     const onDelete = useCallback((id: string) => {
         setDeletingId(id);
@@ -46,6 +48,14 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 title="Properties"
                 subtitle="List of your properties"
             />
+            {editing && (
+                <EditListingModal
+                    listing={editing}
+                    isOpen={!!editing}
+                    onClose={() => setEditing(null)}
+                    onSuccess={() => router.refresh()}
+                />
+            )}
             <div
                 className="
           mt-10
@@ -60,15 +70,25 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
         "
             >
                 {listings.map((listing: any) => (
-                    <ListingCard
-                        key={listing.id}
-                        data={listing}
-                        actionId={listing.id}
-                        onAction={onDelete}
-                        disabled={deletingId === listing.id}
-                        actionLabel="Delete property"
-                        currentUser={currentUser}
-                    />
+                    <div key={listing.id} className="relative">
+                        <ListingCard
+                            data={listing}
+                            actionId={listing.id}
+                            onAction={onDelete}
+                            disabled={deletingId === listing.id}
+                            actionLabel="Delete property"
+                            currentUser={currentUser}
+                        />
+                        <div className="absolute top-3 left-3 flex gap-2">
+                            <button
+                                className="px-3 py-1 text-xs rounded-full bg-white/90 border shadow hover:bg-white"
+                                onClick={() => setEditing(listing)}
+                                title="Edit"
+                            >
+                                Edit
+                            </button>
+                        </div>
+                    </div>
                 ))}
             </div>
         </Container>

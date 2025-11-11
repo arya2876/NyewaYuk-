@@ -110,32 +110,83 @@ export default async function getItems(params: IItemsParams) {
       orderBy,
     });
 
-    // Ranking: prioritize matches in title/brand over other fields
+  // Ranking: fuzzy-ish scoring & prioritize title/brand; light fallback if query short
     let ranked = items;
     if (sort !== 'relevance' && sort) {
-      // For explicit non-relevance sorts we skip custom ranking
-      ranked = items;
+      ranked = items; // explicit sort overrides relevance scoring
     } else if (q && q.trim().length > 0) {
-      const term = q.trim().toLowerCase();
+      const raw = q.trim();
+      const term = raw.toLowerCase();
+      const termLen = term.length;
+
+      // Precompute a lightweight trigram / substring set for fuzzy contains
+      const fuzzify = (s: string) => {
+        const str = s.toLowerCase();
+        const grams = new Set<string>();
+        for (let i = 0; i < str.length - 2; i++) {
+          grams.add(str.slice(i, i + 3));
+        }
+        return grams;
+      };
+
+      const termTrigrams = fuzzify(term);
+
+      const fuzzyContains = (field: string) => {
+        if (!field) return 0;
+        const f = field.toLowerCase();
+        if (f.includes(term)) return 1; // direct contains
+        // short queries: skip fuzzy (avoid noise for <=2 chars)
+        if (termLen < 3) return 0;
+        const grams = fuzzify(f);
+        let matchCount = 0;
+        termTrigrams.forEach(g => { if (grams.has(g)) matchCount++; });
+        const ratio = matchCount / Math.max(1, termTrigrams.size);
+        return ratio >= 0.4 ? ratio : 0; // threshold gate
+      };
+
       const scoreFor = (it: any) => {
-        const title = (it.title || '').toLowerCase();
-        const brand = (it.brand || '').toLowerCase();
-        const category = (it.category || '').toLowerCase();
-        const specs = (it.specifications || '').toLowerCase();
-        const desc = (it.description || '').toLowerCase();
+        const title = (it.title || '');
+        const brand = (it.brand || '');
+        const category = (it.category || '');
+        const specs = (it.specifications || '');
+        const desc = (it.description || '');
 
         let s = 0;
-        // startsWith is strongest
-        if (title.startsWith(term)) s += 100;
-        if (brand.startsWith(term)) s += 90;
-        // contains has lower weight
-        if (title.includes(term)) s += 60;
-        if (brand.includes(term)) s += 50;
-        if (category.includes(term)) s += 30;
-        if (specs.includes(term)) s += 20;
-        if (desc.includes(term)) s += 10;
-        // recency slight boost
-        s += Math.min(5, Math.max(0, (Date.now() - new Date(it.createdAt).getTime()) / (1000 * 3600 * 24) < 7 ? 5 : 0));
+        // Exact / prefix boosts
+        if (title.toLowerCase().startsWith(term)) s += 140;
+        if (brand.toLowerCase().startsWith(term)) s += 120;
+        // Whole word boundary-ish match (simple)
+        const wordBoundary = new RegExp(`(^|\s)${term.replace(/[-/\\^$*+?.()|[\]{}]/g, '')}(?=$|\s)`, 'i');
+        if (wordBoundary.test(title)) s += 40;
+        if (wordBoundary.test(brand)) s += 35;
+
+        // Contains (non prefix)
+        if (title.toLowerCase().includes(term)) s += 70;
+        if (brand.toLowerCase().includes(term)) s += 60;
+        if (category.toLowerCase().includes(term)) s += 35;
+        if (specs.toLowerCase().includes(term)) s += 25;
+        if (desc.toLowerCase().includes(term)) s += 15;
+
+        // Fuzzy partial overlap (scaled)
+        s += fuzzyContains(title) * 30;
+        s += fuzzyContains(brand) * 25;
+        s += fuzzyContains(specs) * 15;
+        s += fuzzyContains(desc) * 10;
+
+        // Recent boost (items < 7 days old)
+        const days = (Date.now() - new Date(it.createdAt).getTime()) / 86400000;
+        if (days < 7) s += 8 - Math.floor(days); // up to +8 day 0
+
+        // Verified & rich media slight bonus
+        if (it.isNyewaGuardVerified) s += 10;
+        // More verification photos (guard images length) bonus
+        try {
+          if (it.initialConditionJson) {
+            const parsed = JSON.parse(it.initialConditionJson);
+            if (Array.isArray(parsed?.images)) s += Math.min(12, parsed.images.length * 2);
+          }
+        } catch { /* ignore */ }
+
         return s;
       };
 
