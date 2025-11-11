@@ -136,7 +136,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 {/* Judul */}
                 <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{renderHighlighted(data.title)}</h3>
                 {/* Lokasi atau kategori */}
-                <div className="text-sm text-neutral-500">{reservationDate || `${location?.region}, ${location?.label}` || data.category}</div>
+                <div className="text-sm text-neutral-500">
+                    {renderHighlighted(
+                        (reservationDate as any) || `${location?.region}, ${location?.label}` || (data.category as any)
+                    )}
+                </div>
                 {/* Harga */}
                 <div className="flex flex-row items-baseline gap-2">
                     <div className="text-lg font-extrabold text-ny-primary">
