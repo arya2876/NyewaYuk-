@@ -13,6 +13,7 @@ import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
 import Container from "@/app/components/Container";
 import { categories } from "@/app/components/navbar/Categories";
 import ListingHead from "@/app/components/listings/ListingHead";
+import Image from 'next/image';
 import ListingInfo from "@/app/components/listings/ListingInfo";
 import ListingReservation from "@/app/components/listings/ListingReservation";
 
@@ -119,6 +120,17 @@ const ListingClient: React.FC<ItemClientProps> = ({
         }
     }, [dateRange, item]);
 
+    // Extract NyewaGuard verification images (if any)
+    const guardImages: string[] = useMemo(() => {
+        try {
+            const raw = (item as any).initialConditionJson as string | undefined;
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed?.images)) return parsed.images as string[];
+            return [];
+        } catch { return []; }
+    }, [item]);
+
     return (
         <Container>
             <div
@@ -135,6 +147,22 @@ const ListingClient: React.FC<ItemClientProps> = ({
                         id={item.id}
                         currentUser={currentUser}
                     />
+                    {guardImages.length > 0 && (
+                        <div className="mt-2">
+                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                                <span className="inline-block px-2 py-0.5 rounded bg-ny-primary/10 text-ny-primary text-xs font-bold">NyewaGuard</span>
+                                Foto Verifikasi ({guardImages.length})
+                            </h4>
+                            <div className="flex gap-3 overflow-x-auto pb-2">
+                                {guardImages.map((url) => (
+                                    <div key={url} className="relative w-28 h-28 flex-shrink-0 rounded-md overflow-hidden border border-neutral-200 group">
+                                        <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <div
                         className="
               grid 
