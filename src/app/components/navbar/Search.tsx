@@ -6,9 +6,11 @@ import { X as ClearIcon, Search as SearchIcon } from 'lucide-react';
 
 const Search = () => {
     const router = useRouter();
-    const params = useSearchParams();
-    const initialQ = useMemo(() => params?.get('q') ?? '', [params]);
+    const searchParams = useSearchParams();
+    const initialQ = useMemo(() => searchParams?.get('q') ?? '', [searchParams]);
     const [searchQuery, setSearchQuery] = useState<string>(initialQ);
+    const [isAutoSearching, setIsAutoSearching] = useState(false);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const [placeholder, setPlaceholder] = useState<string>('Cari kamera, drone, atau HT...');
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +43,32 @@ const Search = () => {
         const url = `/?q=${encodeURIComponent(q)}`;
         router.push(url);
     }, [router, searchQuery]);
+
+    // Debounced auto-search while typing
+    useEffect(() => {
+        const q = searchQuery.trim();
+        const currentQ = (searchParams?.get('q') || '').trim();
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(() => {
+            if (q === currentQ) return; // nothing changed
+            setIsAutoSearching(true);
+            const params = new URLSearchParams(searchParams?.toString());
+            if (q) {
+                params.set('q', q);
+            } else {
+                params.delete('q');
+            }
+            const url = params.toString() ? `/?${params.toString()}` : '/';
+            router.replace(url);
+            setIsAutoSearching(false);
+        }, 400);
+
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
+    }, [searchQuery, router, searchParams]);
 
     // Keyboard shortcuts: Ctrl/Cmd+K to focus, Escape to clear & reset
     useEffect(() => {

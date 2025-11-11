@@ -84,7 +84,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <>
                 {parts.map((part, idx) =>
                     part.toLowerCase() === q.toLowerCase() ? (
-                        <mark key={idx} className="bg-yellow-100 text-ny-primary rounded px-0.5">
+                        <mark
+                            key={idx}
+                            className="bg-yellow-100/80 text-ny-primary rounded px-0.5 ring-1 ring-ny-primary/10 transition-colors duration-300"
+                        >
                             {part}
                         </mark>
                     ) : (
