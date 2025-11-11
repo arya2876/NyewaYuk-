@@ -25,7 +25,8 @@ interface ListingCardProps {
     disabled?: boolean;
     actionLabel?: string;
     actionId?: string;
-    currentUser?: SafeUser | null
+    currentUser?: SafeUser | null;
+    highlightQuery?: string;
 };
 
 const ListingCard: React.FC<ListingCardProps> = ({
@@ -36,6 +37,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
     actionLabel,
     actionId = '',
     currentUser,
+    highlightQuery,
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
@@ -72,6 +74,26 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
         return `${format(start, 'PP')} - ${format(end, 'PP')}`;
     }, [reservation]);
+
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const renderHighlighted = (text: string) => {
+        const q = (highlightQuery || '').trim();
+        if (!q) return text;
+        const parts = text.split(new RegExp(`(${escapeRegExp(q)})`, 'ig'));
+        return (
+            <>
+                {parts.map((part, idx) =>
+                    part.toLowerCase() === q.toLowerCase() ? (
+                        <mark key={idx} className="bg-yellow-100 text-ny-primary rounded px-0.5">
+                            {part}
+                        </mark>
+                    ) : (
+                        <span key={idx}>{part}</span>
+                    )
+                )}
+            </>
+        );
+    };
 
     return (
         <Link
@@ -112,7 +134,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     </div>
                 </div>
                 {/* Judul */}
-                <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{data.title}</h3>
+                <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{renderHighlighted(data.title)}</h3>
                 {/* Lokasi atau kategori */}
                 <div className="text-sm text-neutral-500">{reservationDate || `${location?.region}, ${location?.label}` || data.category}</div>
                 {/* Harga */}

@@ -57,6 +57,7 @@ const Home = async ({ searchParams }: HomeProps) => {
               currentUser={currentUser}
               key={item.id}
               data={item}
+              highlightQuery={searchParams?.q as any}
             />
           ))}
         </div>
