@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { X as ClearIcon, Search as SearchIcon } from 'lucide-react';
 
 const Search = () => {
@@ -9,6 +9,7 @@ const Search = () => {
     const params = useSearchParams();
     const initialQ = useMemo(() => params?.get('q') ?? '', [params]);
     const [searchQuery, setSearchQuery] = useState<string>(initialQ);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         // Keep input in sync if URL changes externally
@@ -26,11 +27,30 @@ const Search = () => {
         router.push(url);
     }, [router, searchQuery]);
 
+    // Keyboard shortcuts: Ctrl/Cmd+K to focus, Escape to clear & reset
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k')) {
+                e.preventDefault();
+                inputRef.current?.focus();
+            }
+            if (e.key === 'Escape') {
+                if (searchQuery) {
+                    setSearchQuery('');
+                    router.push('/');
+                }
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [router, searchQuery]);
+
     return (
         <div className="w-full">
             <form onSubmit={handleSearch} className="w-full">
                 <div className="relative">
                     <input
+                        ref={inputRef}
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
