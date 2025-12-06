@@ -29,8 +29,8 @@ export default function SewaPage() {
   const { getByValue } = useIndonesianCities();
 
   useEffect(() => {
-    const lokasi = (params.get("lokasi") || "").toLowerCase();
-    const radiusKm = params.get("radiusKm") || "10";
+    const lokasi = (params?.get("lokasi") || "").toLowerCase();
+    const radiusKm = params?.get("radiusKm") || "10";
 
     let lat: number | null = null;
     let lng: number | null = null;

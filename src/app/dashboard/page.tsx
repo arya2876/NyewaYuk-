@@ -4,6 +4,8 @@ import getListings from '@/app/actions/getListings';
 import TripsClient from '@/app/trips/TripsClient';
 import PropertiesClient from '@/app/properties/PropertiesClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const currentUser = await getCurrentUser();
 

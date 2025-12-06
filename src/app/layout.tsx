@@ -26,6 +26,8 @@ export const metadata = {
   },
 };
 
+export const dynamic = 'force-dynamic';
+
 const font = Nunito({
   subsets: ['latin'],
 });

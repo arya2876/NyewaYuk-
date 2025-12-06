@@ -1,1 +1,99 @@
-'use client';\n\nimport { useEffect, useState } from 'react';\nimport { useRouter } from 'next/navigation';\n\ntype Plan = 'FREE' | 'PRO';\n\ninterface RequirePlanProps {\n  children: React.ReactNode;\n  required: Plan;\n  fallback?: React.ReactNode;\n  redirectTo?: string;\n}\n\nexport default function RequirePlan({ \n  children, \n  required, \n  fallback = null, \n  redirectTo \n}: RequirePlanProps) {\n  const [userPlan, setUserPlan] = useState<Plan | null>(null);\n  const router = useRouter();\n\n  useEffect(() => {\n    // In a real app, this would fetch from your auth context or API\n    // For now, we'll assume FREE by default\n    // You can integrate this with your NextAuth session\n    const checkUserPlan = async () => {\n      try {\n        const response = await fetch('/api/user/plan');\n        if (response.ok) {\n          const data = await response.json();\n          setUserPlan(data.plan || 'FREE');\n        } else {\n          setUserPlan('FREE');\n        }\n      } catch (error) {\n        console.warn('Could not fetch user plan, defaulting to FREE');\n        setUserPlan('FREE');\n      }\n    };\n\n    checkUserPlan();\n  }, []);\n\n  useEffect(() => {\n    if (userPlan && userPlan !== required && redirectTo) {\n      router.push(redirectTo);\n    }\n  }, [userPlan, required, redirectTo, router]);\n\n  if (userPlan === null) {\n    return <div className=\"flex items-center justify-center p-4\">Loading...</div>;\n  }\n\n  if (userPlan !== required) {\n    if (fallback) {\n      return <>{fallback}</>;\n    }\n    \n    return (\n      <div className=\"bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center\">\n        <h3 className=\"text-lg font-semibold text-yellow-800 mb-2\">\n          {required === 'PRO' ? 'Pro Plan Required' : 'Access Restricted'}\n        </h3>\n        <p className=\"text-yellow-700 mb-4\">\n          {required === 'PRO' \n            ? 'This feature requires a Pro subscription. Upgrade now to access advanced analytics and tools.'\n            : 'You do not have access to this feature.'}\n        </p>\n        {required === 'PRO' && (\n          <a \n            href=\"/billing/upgrade\" \n            className=\"inline-block px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors\"\n          >\n            Upgrade to Pro\n          </a>\n        )}\n      </div>\n    );\n  }\n\n  return <>{children}</>;\n}\n\n// HOC version for class components or advanced usage\nexport function withPlan<P extends object>(\n  Component: React.ComponentType<P>,\n  required: Plan,\n  fallback?: React.ReactNode\n) {\n  return function WithPlanComponent(props: P) {\n    return (\n      <RequirePlan required={required} fallback={fallback}>\n        <Component {...props} />\n      </RequirePlan>\n    );\n  };\n}
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+type Plan = 'FREE' | 'PRO';
+
+interface RequirePlanProps {
+	children: React.ReactNode;
+	required: Plan;
+	fallback?: React.ReactNode;
+	redirectTo?: string;
+}
+
+export default function RequirePlan({ 
+	children, 
+	required, 
+	fallback = null, 
+	redirectTo 
+}: RequirePlanProps) {
+	const [userPlan, setUserPlan] = useState<Plan | null>(null);
+	const router = useRouter();
+
+	useEffect(() => {
+		// In a real app, this would fetch from your auth context or API
+		// For now, we'll assume FREE by default
+		// You can integrate this with your NextAuth session
+		const checkUserPlan = async () => {
+			try {
+				const response = await fetch('/api/user/plan');
+				if (response.ok) {
+					const data = await response.json();
+					setUserPlan(data.plan || 'FREE');
+				} else {
+					setUserPlan('FREE');
+				}
+			} catch (error) {
+				console.warn('Could not fetch user plan, defaulting to FREE');
+				setUserPlan('FREE');
+			}
+		};
+
+		checkUserPlan();
+	}, []);
+
+	useEffect(() => {
+		if (userPlan && userPlan !== required && redirectTo) {
+			router.push(redirectTo);
+		}
+	}, [userPlan, required, redirectTo, router]);
+
+	if (userPlan === null) {
+		return <div className="flex items-center justify-center p-4">Loading...</div>;
+	}
+
+	if (userPlan !== required) {
+		if (fallback) {
+			return <>{fallback}</>;
+		}
+    
+		return (
+			<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+				<h3 className="text-lg font-semibold text-yellow-800 mb-2">
+					{required === 'PRO' ? 'Pro Plan Required' : 'Access Restricted'}
+				</h3>
+				<p className="text-yellow-700 mb-4">
+					{required === 'PRO' 
+						? 'This feature requires a Pro subscription. Upgrade now to access advanced analytics and tools.'
+						: 'You do not have access to this feature.'}
+				</p>
+				{required === 'PRO' && (
+					<a 
+						href="/billing/upgrade" 
+						className="inline-block px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+					>
+						Upgrade to Pro
+					</a>
+				)}
+			</div>
+		);
+	}
+
+	return <>{children}</>;
+}
+
+// HOC version for class components or advanced usage
+export function withPlan<P extends object>(
+	Component: React.ComponentType<P>,
+	required: Plan,
+	fallback?: React.ReactNode
+) {
+	return function WithPlanComponent(props: P) {
+		return (
+			<RequirePlan required={required} fallback={fallback}>
+				<Component {...props} />
+			</RequirePlan>
+		);
+	};
+}

@@ -33,10 +33,9 @@ const DATA_FILE = `${process.cwd().replace(/\\/g, '/')}/dev-data/fallbackListing
 function loadFromDisk() {
   if (process.env.NODE_ENV !== 'development') return;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const fs = require('fs');
+    const fs = require('fs') as typeof import('fs');
     if (!fs.existsSync(DATA_FILE)) {
-      persistenceEnabled = true; // file can be created later
+      persistenceEnabled = true;
       return;
     }
     const raw = fs.readFileSync(DATA_FILE, 'utf-8');
@@ -50,17 +49,15 @@ function loadFromDisk() {
     }
     persistenceEnabled = true;
   } catch {
-    persistenceEnabled = false; // disable silently if fs not available
+    persistenceEnabled = false;
   }
 }
 
 export function persistFallbackListings() {
   if (!persistenceEnabled || process.env.NODE_ENV !== 'development') return;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const fs = require('fs');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const path = require('path');
+    const fs = require('fs') as typeof import('fs');
+    const path = require('path') as typeof import('path');
     fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
     fs.writeFileSync(DATA_FILE, JSON.stringify(listingFallbackStore, null, 2), 'utf-8');
   } catch {

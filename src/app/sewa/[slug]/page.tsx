@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 // Basic category validation list. Mirror labels used in CategoryBox if needed.
 // Adjust this list to match actual category labels/slugs in the app.
@@ -24,11 +24,10 @@ const slugToCategory = (slug: string): string | null => {
 };
 
 export default function SewaCategoryPage() {
-  const params = useParams();
   const router = useRouter();
 
   useEffect(() => {
-    const rawSlug = (params?.slug as string) || '';
+    const rawSlug = typeof window !== 'undefined' ? (window.location.pathname.split('/').pop() || '') : '';
     const category = slugToCategory(rawSlug);
     if (category) {
       const sp = new URLSearchParams();
@@ -37,7 +36,7 @@ export default function SewaCategoryPage() {
     } else {
       router.replace('/');
     }
-  }, [params, router]);
+  }, [router]);
 
   return null;
 }

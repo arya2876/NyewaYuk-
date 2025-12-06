@@ -11,22 +11,25 @@ export default function PaymentConfirmForm({ orderId, onDone }: { orderId: strin
 
   const submit = async () => {
     setMsg(null);
-    startTransition(async () => {
-      try {
-        const res = await fetch('/api/payments/confirm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, amount: Number(amount), reference }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || 'Gagal konfirmasi');
-        setMsg('Pembayaran dikonfirmasi');
-        setAmount(''); setReference('');
-        onDone?.();
-        router.refresh();
-      } catch (e: any) {
-        setMsg(e.message);
-      }
+    startTransition(() => {
+      void (async () => {
+        try {
+          const res = await fetch('/api/payments/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, amount: Number(amount), reference }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data?.error || 'Gagal konfirmasi');
+          setMsg('Pembayaran dikonfirmasi');
+          setAmount('');
+          setReference('');
+          onDone?.();
+          router.refresh();
+        } catch (e: any) {
+          setMsg(e.message);
+        }
+      })();
     });
   };
 

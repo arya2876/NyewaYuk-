@@ -50,7 +50,6 @@ const LocationModal = () => {
       const { latitude, longitude } = pos.coords;
       // Set pseudo CountrySelectValue
       setLocation({
-        flag: '📍',
         label: 'Lokasi Saya',
         region: 'Nearby',
         value: 'my-location',

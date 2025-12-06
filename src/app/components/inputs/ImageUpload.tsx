@@ -33,7 +33,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value, label }) => 
                         <CldUploadWidget
                 onUpload={handleUpload}
                 uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'nyewayuk_preset'}
-                                cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
                                 options={{
                                     maxFiles: 1,
                                     sources: ['local', 'url', 'camera'],

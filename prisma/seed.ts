@@ -1,1 +1,97 @@
-import { PrismaClient } from '@prisma/client';\nimport bcrypt from 'bcrypt';\n\nconst prisma = new PrismaClient();\n\nasync function main() {\n  console.log('🌱 Seeding database with sample users...');\n\n  // Hash password for test users\n  const hashedPassword = await bcrypt.hash('test123', 12);\n\n  // Create FREE user\n  const freeUser = await prisma.user.upsert({\n    where: { email: 'user@free.com' },\n    update: {},\n    create: {\n      email: 'user@free.com',\n      name: 'Free User',\n      hashedPassword,\n      plan: 'FREE' // This will be the default anyway\n    }\n  });\n\n  console.log('✅ Created FREE user:', { id: freeUser.id, email: freeUser.email, plan: freeUser.plan });\n\n  // Create PRO user\n  const proUser = await prisma.user.upsert({\n    where: { email: 'user@pro.com' },\n    update: {},\n    create: {\n      email: 'user@pro.com',\n      name: 'Pro User',\n      hashedPassword,\n      plan: 'PRO'\n    }\n  });\n\n  console.log('✅ Created PRO user:', { id: proUser.id, email: proUser.email, plan: proUser.plan });\n\n  // Create some sample listings for testing\n  const sampleListing = await prisma.listing.upsert({\n    where: { \n      id: 'sample-listing-1' \n    },\n    update: {},\n    create: {\n      id: 'sample-listing-1',\n      title: 'Modern Apartment in Jakarta',\n      description: 'Beautiful modern apartment with city views',\n      imageSrc: '/images/apartment.jpg',\n      category: 'Apartment',\n      roomCount: 2,\n      bathroomCount: 1,\n      guestCount: 4,\n      locationValue: 'ID,Jakarta',\n      price: 500000,\n      userId: freeUser.id\n    }\n  });\n\n  console.log('✅ Created sample listing:', { id: sampleListing.id, title: sampleListing.title });\n\n  // Create sample reservations\n  const sampleReservation = await prisma.reservation.create({\n    data: {\n      userId: proUser.id,\n      listingId: sampleListing.id,\n      startDate: new Date('2024-02-01'),\n      endDate: new Date('2024-02-03'),\n      totalPrice: 1000000\n    }\n  });\n\n  console.log('✅ Created sample reservation:', { id: sampleReservation.id });\n\n  console.log('🎉 Seeding completed successfully!');\n  console.log('\\n📋 Test Credentials:');\n  console.log('FREE User: user@free.com / test123');\n  console.log('PRO User: user@pro.com / test123');\n}\n\nmain()\n  .catch((e) => {\n    console.error(e);\n    process.exit(1);\n  })\n  .finally(async () => {\n    await prisma.$disconnect();\n  });
+/* eslint-disable */
+// @ts-nocheck
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+async function main() {
+	console.log('🌱 Seeding database with sample users...');
+
+	const hashedPassword = await bcrypt.hash('test123', 12);
+
+	const freeUser = await prisma.user.upsert({
+		where: { email: 'user@free.com' },
+		update: {},
+		create: {
+			email: 'user@free.com',
+			name: 'Free User',
+			hashedPassword,
+			plan: 'FREE',
+		},
+	});
+
+	console.log('✅ Created FREE user:', {
+		id: freeUser.id,
+		email: freeUser.email,
+		plan: freeUser.plan,
+	});
+
+	const proUser = await prisma.user.upsert({
+		where: { email: 'user@pro.com' },
+		update: {},
+		create: {
+			email: 'user@pro.com',
+			name: 'Pro User',
+			hashedPassword,
+			plan: 'PRO',
+		},
+	});
+
+	console.log('✅ Created PRO user:', {
+		id: proUser.id,
+		email: proUser.email,
+		plan: proUser.plan,
+	});
+
+	const sampleListing = await prisma.listing.upsert({
+		where: {
+			id: 'sample-listing-1',
+		},
+		update: {},
+		create: {
+			id: 'sample-listing-1',
+			title: 'Modern Apartment in Jakarta',
+			description: 'Beautiful modern apartment with city views',
+			imageSrc: '/images/apartment.jpg',
+			category: 'Apartment',
+			roomCount: 2,
+			bathroomCount: 1,
+			guestCount: 4,
+			locationValue: 'ID,Jakarta',
+			price: 500000,
+			userId: freeUser.id,
+		},
+	});
+
+	console.log('✅ Created sample listing:', {
+		id: sampleListing.id,
+		title: sampleListing.title,
+	});
+
+	const sampleReservation = await prisma.reservation.create({
+		data: {
+			userId: proUser.id,
+			listingId: sampleListing.id,
+			startDate: new Date('2024-02-01'),
+			endDate: new Date('2024-02-03'),
+			totalPrice: 1000000,
+		},
+	});
+
+	console.log('✅ Created sample reservation:', { id: sampleReservation.id });
+
+	console.log('🎉 Seeding completed successfully!');
+	console.log('\n📋 Test Credentials:');
+	console.log('FREE User: user@free.com / test123');
+	console.log('PRO User: user@pro.com / test123');
+}
+
+main()
+	.catch(e => {
+		console.error(e);
+		process.exit(1);
+	})
+	.finally(async () => {
+		await prisma.$disconnect();
+	});

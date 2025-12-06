@@ -126,13 +126,9 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
                     <div key={listing.id} className="relative">
                         <ListingCard
                             data={listing}
-                            actionId={listing.id}
-                            onAction={(id: string) => onDelete(id)}
-                            disabled={deletingId === listing.id}
-                            actionLabel="Delete property"
                             currentUser={currentUser}
                         />
-                        <div className="absolute top-3 left-3 flex gap-2">
+                        <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
                             <button
                                 className="px-3 py-1 text-xs rounded-full bg-white/90 border shadow hover:bg-white"
                                 onClick={(e) => {
@@ -143,20 +139,32 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
                             >
                                 Edit
                             </button>
-                            {!listing.isDeleted && (
-                                <button
-                                    className="px-3 py-1 text-xs rounded-full bg-yellow-600 text-white shadow hover:bg-yellow-500"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setConfirmTrashId(listing.id);
-                                    }}
-                                    title="Trash"
-                                    disabled={deletingId === listing.id}
-                                >
-                                    Trash
-                                </button>
-                            )}
-                            {listing.isDeleted && (
+                            {!listing.isDeleted ? (
+                                <>
+                                    <button
+                                        className="px-3 py-1 text-xs rounded-full bg-yellow-600 text-white shadow hover:bg-yellow-500"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmTrashId(listing.id);
+                                        }}
+                                        title="Trash"
+                                        disabled={deletingId === listing.id}
+                                    >
+                                        Trash
+                                    </button>
+                                    <button
+                                        className="px-3 py-1 text-xs rounded-full bg-red-700 text-white shadow hover:bg-red-600"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setConfirmDeleteId(listing.id);
+                                        }}
+                                        title="Permanent Delete"
+                                        disabled={deletingId === listing.id}
+                                    >
+                                        Permanent Delete
+                                    </button>
+                                </>
+                            ) : (
                                 <>
                                     <button
                                         className="px-3 py-1 text-xs rounded-full bg-green-600 text-white shadow hover:bg-green-500"
@@ -174,10 +182,10 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
                                             e.stopPropagation();
                                             setConfirmDeleteId(listing.id);
                                         }}
-                                        title="Delete Permanently"
+                                        title="Permanent Delete"
                                         disabled={deletingId === listing.id}
                                     >
-                                        Delete Permanently
+                                        Permanent Delete
                                     </button>
                                 </>
                             )}

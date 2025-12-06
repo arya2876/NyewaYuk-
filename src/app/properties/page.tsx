@@ -7,6 +7,8 @@ import getItems from "@/app/actions/getListings";
 
 import PropertiesClient from "./PropertiesClient";
 
+export const dynamic = 'force-dynamic';
+
 interface SearchProps { searchParams: { includeDeleted?: string } }
 
 const PropertiesPage = async ({ searchParams }: SearchProps) => {

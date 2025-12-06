@@ -119,7 +119,7 @@ const ListingClient: React.FC<ItemClientProps> = ({
                 logisticsFee,
                 userName: currentUser.name || 'Pengguna',
                 userPhone: currentUser.email || '628xxxxxxxxx', // TODO: Add phone to user schema
-                userEmail: currentUser.email,
+                userEmail: currentUser.email ?? undefined,
             });
             
             // 5. Sukses - Redirect & Notifikasi
