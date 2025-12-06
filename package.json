@@ -29,7 +29,7 @@
     "framer-motion": "^11.18.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.553.0",
-    "mongodb": "4.1",
+    "mongodb": "7.0",
     "next": "13.2.4",
     "next-auth": "^4.22.1",
     "next-cloudinary": "^4.13.1",
