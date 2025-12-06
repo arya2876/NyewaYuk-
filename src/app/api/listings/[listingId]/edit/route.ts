@@ -53,7 +53,7 @@ export async function PATCH(request: Request, { params }: { params: IParams }) {
     ? JSON.stringify({ images: guardImagesArray, firstImage: guardImagesArray[0] })
     : null;
 
-  const isNyewaGuardVerified = guardImagesArray.length >= 3;
+  const isNyewaGuardVerified = guardImagesArray.length >= 2;
 
   const updated = await prisma.item.update({
     where: { id: listingId },

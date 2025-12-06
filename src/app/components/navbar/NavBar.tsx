@@ -17,14 +17,12 @@ const NavBar: React.FC<NavBarProps> = ({
             <div className="border-b border-neutral-200/70 bg-white">
                 <Container>
                     <div className="flex flex-row items-center justify-between gap-4 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             <Logo />
-                            <Link href="/" className="text-lg font-bold tracking-wide text-ny-primary hidden sm:inline-block">
-                                NyewaYuk
-                            </Link>
                         </div>
-                        <div className="flex-1 max-w-xl hidden md:block">
+                        <div className="flex-1 max-w-xl hidden md:flex items-center gap-4">
                             <Search />
+                            <Link href="/marketing" className="text-sm text-gray-700 hover:text-black transition hidden lg:inline">Tentang</Link>
                         </div>
                         <div className="flex items-center gap-4">
                             <UserMenu currentUser={currentUser} />

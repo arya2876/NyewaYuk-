@@ -9,6 +9,7 @@ import { differenceInDays, eachDayOfInterval } from 'date-fns';
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/app/types";
+import { createBookingViaN8n } from "@/app/actions/n8nActions";
 
 import Container from "@/app/components/Container";
 import { categories } from "@/app/components/navbar/Categories";
@@ -59,49 +60,83 @@ const ListingClient: React.FC<ItemClientProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [totalPrice, setTotalPrice] = useState((item as any).pricePerDay || 0);
     const [dateRange, setDateRange] = useState<Range>(initialDateRange);
+    
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const onCreateReservation = useCallback((logistics: { method: string; fee: number; serviceFee: number; depositAmount: number; }) => {
+    // LOGIKA 1: Kalkulasi Total Harga Dinamis
+    const calculateTotal = useCallback(() => {
+        const pricePerDay = (item as any).pricePerDay || 0;
+        
+        if (!dateRange.startDate || !dateRange.endDate) {
+            return pricePerDay;
+        }
+        
+        const dayCount = differenceInDays(dateRange.endDate, dateRange.startDate);
+        const rentalCost = (dayCount > 0 ? dayCount : 1) * pricePerDay;
+        
+        // Biaya layanan 10%
+        const serviceFee = Math.round(rentalCost * 0.1);
+        
+        // Deposit hanya jika harga > 2 juta (sesuai strategi NyewaYuk)
+        const depositAmount = pricePerDay > 2000000 ? Math.round(pricePerDay * 0.5) : 0;
+        
+        return rentalCost + serviceFee + depositAmount;
+    }, [item, dateRange]);
+
+    // NyewaGuard AI dinonaktifkan untuk MVP
+
+    // LOGIKA 3: Handler Bayar & Booking via n8n
+    const onSubmitBooking = useCallback(async (logistics: { method: string; fee: number; serviceFee: number; depositAmount: number; }) => {
+        // 1. Cek login
         if (!currentUser) {
             return loginModal.onOpen();
         }
-        setIsLoading(true);
-
+        
+        // 2. NyewaGuard AI disabled: tidak ada cek AI sebelum booking
         const pricePerDay = (item as any).pricePerDay || 0;
-        const serviceFee = logistics?.serviceFee ?? Math.round((totalPrice || 0) * 0.1);
-        const depositAmount = logistics?.depositAmount ?? Math.round(pricePerDay * 0.5);
-        const logisticsMethod = logistics?.method || 'Self-Pickup';
-        const logisticsFee = logistics?.fee || 0;
+        
+        // 3. Set processing state
+        setIsProcessing(true);
+        setIsLoading(true);
+        
+        try {
+            const serviceFee = logistics?.serviceFee ?? Math.round((totalPrice || 0) * 0.1);
+            const depositAmount = logistics?.depositAmount ?? (pricePerDay > 2000000 ? Math.round(pricePerDay * 0.5) : 0);
+            const logisticsMethod = logistics?.method || 'Self-Pickup';
+            const logisticsFee = logistics?.fee || 0;
+            
+            // 4. Panggil n8n Server Action
+            await createBookingViaN8n({
+                userId: currentUser.id,
+                itemId: item.id,
+                itemTitle: item.title,
+                startDate: dateRange.startDate?.toISOString() || new Date().toISOString(),
+                endDate: dateRange.endDate?.toISOString() || new Date().toISOString(),
+                totalPrice,
+                serviceFee,
+                depositAmount,
+                logisticsMethod,
+                logisticsFee,
+                userName: currentUser.name || 'Pengguna',
+                userPhone: currentUser.email || '628xxxxxxxxx', // TODO: Add phone to user schema
+                userEmail: currentUser.email,
+            });
+            
+            // 5. Sukses - Redirect & Notifikasi
+            toast.success('🎉 Booking Berhasil! Cek WhatsApp Anda untuk instruksi pembayaran.');
+            setDateRange(initialDateRange);
+            router.push('/trips');
+            
+        } catch (error: any) {
+            // 6. Handle error
+            toast.error(`Gagal membuat booking: ${error.message}`);
+        } finally {
+            setIsProcessing(false);
+            setIsLoading(false);
+        }
+    }, [currentUser, item, dateRange, totalPrice, loginModal, router]);
 
-        axios.post('/api/reservations', {
-            totalPrice,
-            serviceFee,
-            depositAmount,
-            logisticsMethod,
-            logisticsFee,
-            startDate: dateRange.startDate,
-            endDate: dateRange.endDate,
-            itemId: item?.id
-        })
-            .then(() => {
-                toast.success('Item ditambahkan ke Checkout');
-                setDateRange(initialDateRange);
-                router.push('/checkout');
-            })
-            .catch(() => {
-                toast.error('Something went wrong.');
-            })
-            .finally(() => {
-                setIsLoading(false);
-            })
-    },
-        [
-            totalPrice,
-            dateRange,
-            item,
-            router,
-            currentUser,
-            loginModal
-        ]);
+    const onCreateReservation = onSubmitBooking;
 
     useEffect(() => {
         if (dateRange.startDate && dateRange.endDate) {
@@ -194,7 +229,7 @@ const ListingClient: React.FC<ItemClientProps> = ({
                                         className="relative w-28 h-28 flex-shrink-0 rounded-md overflow-hidden border border-neutral-200 group focus:outline-none focus:ring-2 focus:ring-ny-primary"
                                         title="Jadikan gambar utama"
                                     >
-                                        <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} />
+                                        <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} sizes="96px" />
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
                                     </button>
                                 ))}
@@ -237,18 +272,22 @@ const ListingClient: React.FC<ItemClientProps> = ({
                                 onChangeDate={(value) => setDateRange(value)}
                                 dateRange={dateRange}
                                 onSubmit={onCreateReservation}
-                                disabled={isLoading}
+                                disabled={isLoading || isProcessing}
                                 disabledDates={disabledDates}
                                 itemLat={(item as any).latitude || null}
                                 itemLng={(item as any).longitude || null}
                             />
+                            
+                            {/* NyewaGuard AI section dihapus untuk MVP */}
                         </div>
                     </div>
                 </div>
                 {lightboxOpen && (
                     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center" onClick={closeLightbox}>
                         <div className="relative w-[90vw] h-[80vh]" onClick={(e) => e.stopPropagation()}>
-                            <Image src={allImages[lightboxIndex]} alt="Preview" fill style={{ objectFit: 'contain' }} />
+                                                    <div className="relative w-full h-full">
+                            <Image src={allImages[lightboxIndex]} alt="Preview" fill style={{ objectFit: 'contain' }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw" />
+                        </div>
                             <button type="button" className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full px-3 py-1 text-sm font-semibold" onClick={closeLightbox}>Tutup</button>
                             {allImages.length > 1 && (
                                 <>

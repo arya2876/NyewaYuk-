@@ -58,3 +58,5 @@ https://next-airbnb-divyeshio.vercel.app/
 ## Favorites Properties
 
 ![Favorites](https://raw.githubusercontent.com/divyeshio/next-airbnb/main/screens/favorites-page.png)
+
+<!-- Blog-site and dual-app development notes removed: project focuses on the main platform only. -->

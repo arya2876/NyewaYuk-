@@ -3,6 +3,7 @@
 import qs from 'query-string';
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+// location modal no longer mandatory for category filter
 import { ComponentType } from "react";
 
 interface CategoryBoxProps {
@@ -19,29 +20,21 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
     const router = useRouter();
     const params = useSearchParams();
 
+    // no-op: location modal optional
+
     const handleClick = useCallback(() => {
-        let currentQuery = {};
-
-        if (params) {
-            currentQuery = qs.parse(params.toString())
+        // Toggle category filter via URL immediately; keep existing params
+        let currentQuery: any = {};
+        if (params) currentQuery = qs.parse(params.toString());
+        const currentCategory = params?.get('category');
+        if (currentCategory === label) {
+            delete currentQuery.category;
+        } else {
+            currentQuery.category = label;
         }
-
-        const updatedQuery: any = {
-            ...currentQuery,
-            category: label
-        }
-
-        if (params?.get('category') === label) {
-            delete updatedQuery.category;
-        }
-
-        const url = qs.stringifyUrl({
-            url: '/',
-            query: updatedQuery
-        }, { skipNull: true });
-
+        const url = qs.stringifyUrl({ url: '/', query: currentQuery }, { skipNull: true });
         router.push(url);
-    }, [label, router, params]);
+    }, [label, params, router]);
 
     return (
         <button

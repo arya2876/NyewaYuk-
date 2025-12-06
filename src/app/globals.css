@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shimmer effect */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer-move 1.6s infinite;
+}
+@keyframes shimmer-move {
+  0% { left: -150%; }
+  100% { left: 150%; }
+}
+
+/* Smooth base transitions and animations */
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Dropdown menu enter/exit */
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes menu-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(6px) scale(0.97); }
+}
+
+.animate-menu-in { animation: menu-in 180ms ease-out both; }
+.animate-menu-out { animation: menu-out 140ms ease-in both; }
+
+/* Utility classes (opt-in) */
+.animate-fade-in { animation: fade-in 400ms ease-out both; }
+.animate-slide-up { animation: slide-up 400ms ease-out both; }
+.transition-base { transition: all 200ms ease-out; }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 html,
 body,
 :root {

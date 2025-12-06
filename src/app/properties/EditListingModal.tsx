@@ -121,7 +121,7 @@ const EditListingModal: React.FC<EditListingModalProps> = ({ listing, isOpen, on
           onAdd={(url) => setGuardImages((prev) => [...prev, url])}
           onRemove={(url) => setGuardImages((prev) => prev.filter((u) => u !== url))}
         />
-        <p className="text-xs text-neutral-500 mt-1">≥ 3 foto akan menandai listing terverifikasi otomatis.</p>
+        <p className="text-xs text-neutral-500 mt-1">≥ 2 foto akan menandai listing terverifikasi otomatis.</p>
       </div>
     </div>
   );

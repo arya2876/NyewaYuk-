@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+// Work around JSX type mismatch in some TS setups by aliasing AnimatePresence as any
+const Presence: any = AnimatePresence;
 import { AiOutlineMenu } from "react-icons/ai";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import useLoginModal from "@/app/hooks/useLoginModal";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
@@ -27,6 +30,12 @@ const UserMenu: React.FC<UserMenuProps> = ({
     const rentModal = useRentModal();
 
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+
+    // Track a single refresh per open session and baseline for scroll
+    const didRefreshRef = useRef(false);
+    const baselinePathRef = useRef<string | null>(null);
+    const baselineScrollRef = useRef<number>(0);
 
     const toggleOpen = useCallback(() => {
         setIsOpen((value) => !value);
@@ -39,6 +48,45 @@ const UserMenu: React.FC<UserMenuProps> = ({
         // Authenticated users: open rent modal (Sewakan Barang flow)
         rentModal.onOpen();
     }, [loginModal, rentModal, currentUser]);
+
+    // When menu opens, capture baseline values and reset refresh guard
+    useEffect(() => {
+        if (isOpen) {
+            didRefreshRef.current = false;
+            baselinePathRef.current = pathname ?? null;
+            baselineScrollRef.current = typeof window !== 'undefined' ? window.scrollY : 0;
+        }
+    }, [isOpen, pathname]);
+
+    // Auto-refresh when route changes while menu is open
+    useEffect(() => {
+        if (!isOpen) return;
+        const baseline = baselinePathRef.current;
+        if (!didRefreshRef.current && baseline !== null && pathname !== baseline) {
+            didRefreshRef.current = true;
+            // Refresh data and close the menu for a clean UX
+            router.refresh();
+            setIsOpen(false);
+        }
+    }, [pathname, isOpen, router]);
+
+    // Auto-refresh when user scrolls downward while menu is open
+    useEffect(() => {
+        if (!isOpen) return;
+        const onScroll = () => {
+            if (didRefreshRef.current) return;
+            const baseline = baselineScrollRef.current || 0;
+            const currentY = window.scrollY || 0;
+            // Trigger only on downward scroll beyond a small threshold
+            if (currentY > baseline + 12) {
+                didRefreshRef.current = true;
+                router.refresh();
+                setIsOpen(false);
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [isOpen, router]);
 
     return (
         <div className="relative">
@@ -73,57 +121,50 @@ const UserMenu: React.FC<UserMenuProps> = ({
                     </div>
                 </div>
             </div>
-            {isOpen && (
-                <div
-                    className="
-            absolute 
-            rounded-xl 
-            shadow-md
-            w-[40vw]
-            md:w-3/4 
-            bg-white 
-            overflow-hidden 
-            right-0 
-            top-12 
-            text-sm
-          "
-                >
-                    <div className="flex flex-col cursor-pointer">
-                        {currentUser ? (
-                            <>
-                                <MenuItem
-                                    label="Sewaanku"
-                                    onClick={() => router.push('/sewaanku')}
-                                />
-                                <MenuItem
-                                    label="Barang Saya"
-                                    onClick={() => router.push('/barang-saya')}
-                                />
-                                <MenuItem
-                                    label="Dasbor Mitra"
-                                    onClick={() => router.push('/dashboard')}
-                                />
-                                <hr />
-                                <MenuItem
-                                    label="Logout"
-                                    onClick={() => signOut()}
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <MenuItem
-                                    label="Login"
-                                    onClick={loginModal.onOpen}
-                                />
-                                <MenuItem
-                                    label="Sign up"
-                                    onClick={registerModal.onOpen}
-                                />
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
+            <Presence>
+                {isOpen && (
+                    <motion.div
+                        role="menu"
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                        transition={{ type: 'spring', stiffness: 520, damping: 34, mass: 0.55 }}
+                        className="
+                            absolute right-0 top-12
+                            w-[40vw] md:w-3/4
+                            rounded-xl shadow-md bg-white overflow-hidden text-sm
+                            origin-top-right
+                        "
+                    >
+                        <div className="flex flex-col cursor-pointer">
+                            {currentUser ? (
+                                <>
+                                    <MenuItem
+                                        label="SewaanKu"
+                                        onClick={() => router.push('/properties')}
+                                    />
+                                    <hr />
+                                    <MenuItem
+                                        label="Logout"
+                                        onClick={() => signOut()}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <MenuItem
+                                        label="Login"
+                                        onClick={loginModal.onOpen}
+                                    />
+                                    <MenuItem
+                                        label="Sign up"
+                                        onClick={registerModal.onOpen}
+                                    />
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </Presence>
         </div>
     );
 }

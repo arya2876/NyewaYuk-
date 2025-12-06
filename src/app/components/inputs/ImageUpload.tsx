@@ -1,79 +1,100 @@
 'use client';
 
-import Image from "next/image";
-import { useCallback } from "react";
-import { TbPhotoPlus } from 'react-icons/tb'
+import { CldUploadWidget } from 'next-cloudinary';
+import Image from 'next/image';
+import { useCallback } from 'react';
+import { TbPhotoPlus } from 'react-icons/tb';
 
 declare global {
-    var cloudinary: any
+    var cloudinary: any;
 }
 
 interface ImageUploadProps {
     onChange: (value: string) => void;
     value: string;
+    label?: string;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({
-    onChange,
-    value
-}) => {
-    const handleUpload = useCallback((error: any, result: any) => {
-        if (result && result.event === 'success') {
-            onChange(result.info.secure_url);
+const ImageUpload: React.FC<ImageUploadProps> = ({ onChange, value, label }) => {
+    const handleUpload = useCallback((result: any) => {
+        try {
+            const url: string | undefined = result?.info?.secure_url;
+            if (url) onChange(url);
+        } catch {
+            // ignore
         }
     }, [onChange]);
 
-    const handleClick = useCallback(() => {
-        if (typeof window !== 'undefined' && window.cloudinary) {
-            window.cloudinary.openUploadWidget(
-                {
-                    cloudName: 'dyxea9scj',
-                    uploadPreset: 'nlvuxwdh',
-                    maxFiles: 1,
-                },
-                handleUpload
-            );
-        }
-    }, [handleUpload]);
-
     return (
-        <div
-            onClick={handleClick}
-            className="
-              relative
-              cursor-pointer
-              hover:opacity-70
-              transition
-              border-dashed 
-              border-2 
-              p-20 
-              border-neutral-300
-              flex
-              flex-col
-              justify-center
-              items-center
-              gap-4
-              text-neutral-600
-            "
-        >
-            <TbPhotoPlus
-                size={50}
-            />
-            <div className="font-semibold text-lg">
-                Click to upload
-            </div>
-            {value && (
-                <div className="absolute inset-0 w-full h-full">
-                    <Image
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        src={value}
-                        alt="House"
-                    />
-                </div>
+        <div>
+            {label && (
+                <div className="mb-2 text-sm font-medium text-neutral-700">{label}</div>
             )}
+                        <CldUploadWidget
+                onUpload={handleUpload}
+                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'nyewayuk_preset'}
+                                cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+                                options={{
+                                    maxFiles: 1,
+                                    sources: ['local', 'url', 'camera'],
+                                    resourceType: 'image',
+                                    folder: process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || 'nyewayuk',
+                                    clientAllowedFormats: ['jpg','jpeg','png','webp']
+                                }}
+            >
+                {({ open }) => {
+                                        const onClick = () => {
+                                            if (typeof open === 'function') {
+                                                open();
+                                            } else {
+                                                console.error('Cloudinary upload widget not ready: check cloudName & uploadPreset env');
+                                                alert('Upload belum siap. Pastikan CLOUDINARY env (cloud name & upload preset) sudah benar lalu reload.');
+                                            }
+                                        };
+                    return (
+                        <div
+                            onClick={onClick}
+                            role="button"
+                            className="
+                                relative
+                                p-4
+                                border-2
+                                border-dashed
+                                rounded-lg
+                                flex
+                                flex-col
+                                items-center
+                                justify-center
+                                gap-2
+                                text-neutral-600
+                                hover:bg-neutral-50
+                                cursor-pointer
+                                min-h-[180px]
+                            "
+                            title="Unggah gambar ke Cloudinary"
+                        >
+                            {value ? (
+                                <div className="relative w-full h-48">
+                                    <Image
+                                        src={value}
+                                        alt="Preview"
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    <TbPhotoPlus size={32} />
+                                    <span className="text-sm">Klik untuk mengunggah</span>
+                                </>
+                            )}
+                        </div>
+                    );
+                }}
+            </CldUploadWidget>
         </div>
     );
-}
+};
 
 export default ImageUpload;

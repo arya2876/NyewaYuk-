@@ -43,6 +43,8 @@ const LoginModal = () => {
         (data) => {
             setIsLoading(true);
 
+            // Keep UI unchanged; but since credentials auth is disabled
+            // we show a friendly message and suggest Google
             signIn('credentials', {
                 ...data,
                 redirect: false,
@@ -57,7 +59,7 @@ const LoginModal = () => {
                     }
 
                     if (callback?.error) {
-                        toast.error(callback.error);
+                        toast.error('Authentication service temporarily unavailable');
                     }
                 });
         }

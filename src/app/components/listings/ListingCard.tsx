@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ShieldCheck, MapPin, Star } from 'lucide-react';
 
 import useCountries from "@/app/hooks/useCountries";
+import useIndonesianCities from "@/app/hooks/useIndonesianCities";
 import {
     SafeListing,
     SafeReservation,
@@ -41,8 +42,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
+    const { getByValue: getCityByValue } = useIndonesianCities();
 
-    const location = getByValue(data.locationValue);
+    // Try resolve location via country (legacy) then city hook
+    const location = getByValue(data.locationValue) || getCityByValue(data.locationValue as any);
 
     const handleCancel = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -114,17 +117,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return (
         <Link
             href={`/listings/${data.id}`}
-            className="col-span-1 group block rounded-xl border border-neutral-100 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            className="col-span-1 group block rounded-xl border border-neutral-100 bg-white transition-base hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ny-primary/30 motion-safe:animate-fade-in"
         >
             <div className="flex flex-col gap-3 w-full p-3">
                 <div
-                    className="
-            aspect-video 
-            w-full 
-            relative 
-            overflow-hidden 
-            rounded-xl
-          "
+                    className="aspect-video w-full relative overflow-hidden rounded-xl"
                 >
                     <Image
                         fill
@@ -132,23 +129,32 @@ const ListingCard: React.FC<ListingCardProps> = ({
               object-cover 
               h-full 
               w-full 
-              group-hover:scale-110 
-              transition
+              transition-transform duration-500 ease-out will-change-transform group-hover:scale-105
             "
                         src={data.imageSrc}
                         alt="Listing"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
+                    {/* subtle gradient overlay on hover for better text contrast */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        {/* Dev fallback badge */}
+                                        {data.id.startsWith('dev_') && (
+                                            <div className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-purple-600/80 backdrop-blur px-2 py-1 text-[11px] font-semibold text-white shadow">
+                                                <span>DEV</span>
+                                            </div>
+                                        )}
                     {guardCount > 0 && (
-                        <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur px-2 py-1 rounded-full shadow text-ny-primary text-xs font-semibold">
+                        <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur px-2 py-1 rounded-full shadow text-ny-primary text-xs font-semibold transition-base">
                             <ShieldCheck size={14} />
                             <span>NyewaGuard {guardCount}</span>
                         </div>
                     )}
-                    <div className="
-            absolute
-            top-3
-            right-3
-          ">
+                                        <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                                                {typeof (data as any).distanceKm === 'number' && (
+                                                    <span className="inline-flex items-center rounded-full bg-white/90 backdrop-blur px-2 py-1 text-[11px] font-medium text-neutral-700 shadow">
+                                                        {(data as any).distanceKm.toFixed(1)} km
+                                                    </span>
+                                                )}
                         <HeartButton
                             listingId={data.id}
                             currentUser={currentUser}
@@ -156,26 +162,26 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     </div>
                 </div>
                 {/* Judul */}
-                <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2">{renderHighlighted(data.title)}</h3>
+                <h3 className="text-base md:text-lg font-semibold leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-neutral-900">{renderHighlighted(data.title)}</h3>
                 {/* Deskripsi singkat */}
                 {Boolean((data as any).description) && (
-                    <p className="text-sm text-neutral-600 line-clamp-2">
+                    <p className="text-sm text-neutral-600 line-clamp-2 transition-colors duration-200">
                         {renderHighlighted((data as any).description as string)}
                     </p>
                 )}
                 {/* Lokasi atau kategori */}
-                <div className="text-sm text-neutral-500">
+                <div className="text-sm text-neutral-500 transition-colors duration-200">
                     {renderHighlighted(
-                        (reservationDate as any) || `${location?.region}, ${location?.label}` || (data.category as any)
+                        (reservationDate as any) || (location ? `${(location as any).label}, ${(location as any).region}, Indonesia` : (data.category as any))
                     )}
                 </div>
                 {/* Harga */}
                 <div className="flex flex-row items-baseline gap-2">
-                    <div className="text-lg font-extrabold text-ny-primary">
+                    <div className="text-lg font-extrabold text-ny-primary transition-colors duration-200">
                         Rp {(price || 0).toLocaleString('id-ID')}
                     </div>
                     {!reservation && (
-                        <div className="text-sm font-medium text-neutral-600">/ hari</div>
+                        <div className="text-sm font-medium text-neutral-600 transition-colors">/ hari</div>
                     )}
                 </div>
                 
@@ -188,13 +194,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 )}
 
                 {/* Lokasi dengan ikon */}
-                <div className="flex flex-row items-center gap-1 text-neutral-600 text-sm">
+                <div className="flex flex-row items-center gap-1 text-neutral-600 text-sm transition-colors">
                     <MapPin size={14} />
                     <span>{location?.label}</span>
                 </div>
 
                 {/* Rating dan jumlah sewa */}
-                <div className="flex flex-row items-center gap-1 text-neutral-600 text-sm">
+                <div className="flex flex-row items-center gap-1 text-neutral-600 text-sm transition-colors">
                     <Star size={14} className="fill-yellow-400 text-yellow-400" />
                     <span className="font-semibold">
                         {(data as any).rating || '5.0'}

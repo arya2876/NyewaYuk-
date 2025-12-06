@@ -69,7 +69,7 @@ export default function HeroCarousel({ slides = defaultSlides }: { slides?: Slid
         className="w-full overflow-hidden snap-x snap-mandatory"
       >
         <div className="flex">
-          {slides.map((s) => (
+          {slides.map((s, i) => (
             <div key={s.id} className="shrink-0 w-full snap-start">
               <div className={`relative h-[180px] sm:h-[220px] md:h-[260px] lg:h-[300px] xl:h-[340px] bg-gradient-to-r ${s.bg} rounded-xl p-6 md:p-8 flex items-center justify-between overflow-hidden`}>
                 <div className="z-10 max-w-[60%]">
@@ -95,6 +95,7 @@ export default function HeroCarousel({ slides = defaultSlides }: { slides?: Slid
                       alt={s.title}
                       width={420}
                       height={280}
+                      priority={i === 0}
                       className="object-contain w-[180px] sm:w-[220px] md:w-[260px] lg:w-[320px] h-auto select-none"
                     />
                   </div>

@@ -27,10 +27,22 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({ images, max = 8, on
 
   const handleClick = useCallback(() => {
     if (typeof window !== 'undefined' && window.cloudinary) {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '';
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '';
+
+      if (!cloudName || !uploadPreset) {
+        console.error('Cloudinary env missing. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET');
+        alert('Cloudinary belum dikonfigurasi. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME dan NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET di .env.local');
+        return;
+      }
       window.cloudinary.openUploadWidget(
         {
-          cloudName: 'dyxea9scj',
-          uploadPreset: 'nlvuxwdh',
+          cloudName,
+          uploadPreset,
+          resourceType: 'image',
+          sources: ['local', 'url', 'camera'],
+          clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+          folder: process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || 'nyewayuk',
           multiple: true,
           maxFiles: Math.max(1, max - images.length),
         },
@@ -44,7 +56,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({ images, max = 8, on
       <div className="mb-3 flex flex-wrap gap-3">
         {images.map((url) => (
           <div key={url} className="relative w-28 h-28 rounded-md overflow-hidden border">
-            <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} />
+            <Image src={url} alt="Guard" fill style={{ objectFit: 'cover' }} sizes="112px" />
             <button
               type="button"
               onClick={() => onRemove(url)}

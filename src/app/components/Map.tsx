@@ -23,23 +23,29 @@ interface MapProps {
 const url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
+const INDONESIA_CENTER: L.LatLngExpression = [-2.5489, 118.0149];
+const INDONESIA_BOUNDS: L.LatLngBoundsExpression = [
+    [-11.0, 95.0], // SouthWest
+    [6.0, 141.0],  // NorthEast
+];
+
 const Map: React.FC<MapProps> = ({ center }) => {
+    const effectiveCenter = (center as L.LatLngExpression) || INDONESIA_CENTER;
+    const zoom = center ? 13 : 5; // Detailed zoom if a specific center provided
     return (
         <MapContainer
-            center={center as L.LatLngExpression || [51, -0.09]}
-            zoom={center ? 4 : 2}
+            center={effectiveCenter}
+            zoom={zoom}
+            minZoom={4}
+            maxBounds={INDONESIA_BOUNDS}
+            maxBoundsViscosity={1.0}
             scrollWheelZoom={false}
             className="h-[35vh] rounded-lg"
         >
-            <TileLayer
-                url={url}
-                attribution={attribution}
-            />
-            {center && (
-                <Marker position={center as L.LatLngExpression} />
-            )}
+            <TileLayer url={url} attribution={attribution} />
+            {center && <Marker position={center as L.LatLngExpression} />}
         </MapContainer>
-    )
+    );
 }
 
 export default Map

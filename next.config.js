@@ -8,6 +8,8 @@ const nextConfig = {
       "res.cloudinary.com",
       "avatars.githubusercontent.com",
       "lh3.googleusercontent.com",
+      // allow github avatar host if needed later
+      "github.com"
     ],
   },
 };

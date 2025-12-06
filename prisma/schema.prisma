@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Plan {
+  FREE
+  PRO
+}
+
 model User {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   name           String?
@@ -20,6 +25,7 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   favoriteIds    String[]  @db.ObjectId
+  plan           Plan      @default(FREE)
   accounts       Account[]
   sessions       Session[]
   items          Item[]
@@ -91,6 +97,9 @@ model Item {
   latitude              Float?    // Koordinat latitude
   longitude             Float?    // Koordinat longitude
   locationValue         String    // Nilai lokasi (contoh: ID-SM untuk Semarang)
+  address               String?   // Alamat detail (jalan, nomor)
+  area                  String?   // Area spesifik (kecamatan/kelurahan/kompleks)
+  postalCode            String?   // Kode pos jika ada
   
   // Relasi
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -121,4 +130,44 @@ model Booking {
   // Relasi
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   item            Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+// Order & Payment for direct WhatsApp flow
+enum OrderStatus {
+  PENDING
+  SENT
+  PAID
+  CANCELED
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+model Order {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String      @db.ObjectId
+  itemId    String      @db.ObjectId
+  phone     String
+  total     Int
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  payments  Payment[]
+}
+
+model Payment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String        @db.ObjectId
+  provider  String        // e.g. manual-transfer, gateway
+  amount    Int
+  status    PaymentStatus @default(PENDING)
+  reference String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

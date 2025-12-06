@@ -7,7 +7,9 @@ import getItems from "@/app/actions/getListings";
 
 import PropertiesClient from "./PropertiesClient";
 
-const PropertiesPage = async () => {
+interface SearchProps { searchParams: { includeDeleted?: string } }
+
+const PropertiesPage = async ({ searchParams }: SearchProps) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
@@ -17,7 +19,8 @@ const PropertiesPage = async () => {
         />
     }
 
-    const listings = await getItems({ userId: currentUser.id, includeDeleted: true });
+    const includeDeleted = searchParams?.includeDeleted === '1';
+    const listings = await getItems({ userId: currentUser.id, includeDeleted });
 
     if (listings.length === 0) {
         return (

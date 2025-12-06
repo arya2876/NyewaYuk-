@@ -1,4 +1,5 @@
 import prisma from "@/app/libs/prismadb";
+import { listingFallbackStore } from "@/app/libs/listingFallbackStore";
 
 export interface IItemsParams {
   userId?: string;
@@ -12,6 +13,10 @@ export interface IItemsParams {
   q?: string;
   sort?: 'relevance' | 'recent' | 'priceAsc' | 'priceDesc';
   includeDeleted?: boolean;
+  locationLat?: number;
+  locationLng?: number;
+  radiusKm?: number; // filter items within radius from provided lat/lng
+  outsideLimit?: number; // display-only limit for outside radius items (handled in page.tsx)
 }
 
 export default async function getItems(params: IItemsParams) {
@@ -30,11 +35,10 @@ export default async function getItems(params: IItemsParams) {
   } = params;
 
     let query: any = {};
-    // Exclude soft-deleted items by default (requires regenerated Prisma client)
-    // Temporarily disabled in the DB filter to avoid runtime error when Prisma Client isn't regenerated.
-    // if (!params.includeDeleted) {
-    //   query.isDeleted = { not: true } as any;
-    // }
+    // Exclude soft-deleted items by default (now that Prisma Client is generated)
+    if (!params.includeDeleted) {
+      query.isDeleted = { not: true } as any;
+    }
 
     // Filter berdasarkan userId (pemilik barang)
     if (userId) {
@@ -111,17 +115,83 @@ export default async function getItems(params: IItemsParams) {
     if (sort === 'priceDesc') orderBy = { pricePerDay: 'desc' };
     if (sort === 'recent') orderBy = { createdAt: 'desc' };
 
-    const items = await prisma.item.findMany({
-      where: query,
-      orderBy,
-    });
-
-    // Fallback client-side filter for soft delete if field is present
-    if (!params.includeDeleted) {
-      // Note: If Prisma Client hasn't been regenerated, isDeleted may be undefined on results
-      // and soft-deleted items may still appear until prisma generate is run and the server restarted.
-      // This is a non-breaking fallback to keep the app running.
-      (items as any) = (items as any[]).filter((it: any) => it?.isDeleted !== true);
+    let items: any[] = [];
+    let dbSucceeded = false;
+    try {
+      items = await prisma.item.findMany({
+        where: query,
+        orderBy,
+      });
+      dbSucceeded = true;
+    } catch (dbErr: any) {
+      // Graceful fallback in development when DB is unreachable
+      const isDev = process.env.NODE_ENV !== 'production';
+      const msg = (dbErr?.message || '').toString();
+      if (isDev) {
+        console.warn('[getItems] DB unavailable, returning empty list for dev. Error:', msg);
+        // Use shared fallback store filtered similarly
+        items = listingFallbackStore.filter(l => {
+          if (query.isDeleted && l.isDeleted) return false;
+          if (query.userId && l.userId !== query.userId) return false;
+          if (query.category && l.category !== query.category) return false;
+          if (query.locationValue && l.locationValue !== query.locationValue) return false;
+          if (query.isNyewaGuardVerified !== undefined && l.isNyewaGuardVerified !== query.isNyewaGuardVerified) return false;
+          if (query.pricePerDay) {
+            if (query.pricePerDay.gte && l.pricePerDay < query.pricePerDay.gte) return false;
+            if (query.pricePerDay.lte && l.pricePerDay > query.pricePerDay.lte) return false;
+          }
+          // Basic text search OR group
+          if (query.OR) {
+            const term = (q || '').trim().toLowerCase();
+            if (term) {
+              const hay = [l.title, l.description, l.brand, l.category, l.specifications, l.condition]
+                .map(v => (v || '').toLowerCase());
+              if (!hay.some(h => h.includes(term))) return false;
+            }
+          }
+          return true;
+        });
+        // For DB-down scenario just continue with fallback items
+      }
+      // In production, rethrow to surface real issue; in development, continue with fallback items
+      if (process.env.NODE_ENV === 'production') {
+        throw dbErr;
+      }
+    }
+    // Merge dev fallback listings only if DB succeeded (development only)
+    if (dbSucceeded && process.env.NODE_ENV !== 'production' && listingFallbackStore.length) {
+      const applyFilter = (l: any) => {
+        if (query.isDeleted && l.isDeleted) return false;
+        if (query.userId && l.userId !== query.userId) return false;
+        if (query.category && l.category !== query.category) return false;
+        if (query.locationValue && l.locationValue !== query.locationValue) return false;
+        if (query.isNyewaGuardVerified !== undefined && l.isNyewaGuardVerified !== query.isNyewaGuardVerified) return false;
+        if (query.pricePerDay) {
+          if (query.pricePerDay.gte && l.pricePerDay < query.pricePerDay.gte) return false;
+          if (query.pricePerDay.lte && l.pricePerDay > query.pricePerDay.lte) return false;
+        }
+        if (query.OR && q && q.trim()) {
+          const term = q.trim().toLowerCase();
+          const hay = [l.title, l.description, l.brand, l.category, l.specifications, l.condition]
+            .map(v => (v || '').toLowerCase());
+          if (!hay.some(h => h.includes(term))) return false;
+        }
+        return true;
+      };
+      const filteredFallback = listingFallbackStore.filter(applyFilter);
+      // Build composite keys from DB items to identify semantic duplicates
+      const existingIds = new Set(items.map(i => i.id));
+      const existingKeys = new Set(
+        items.map(i => `${String(i.userId)}|${String(i.title).trim().toLowerCase()}|${Number(i.pricePerDay)}`)
+      );
+      const merged = items.concat(
+        filteredFallback.filter(f => {
+          if (existingIds.has(f.id)) return false;
+          const key = `${String(f.userId)}|${String(f.title).trim().toLowerCase()}|${Number(f.pricePerDay)}`;
+          return !existingKeys.has(key);
+        })
+      );
+      items = merged;
     }
 
   // Ranking: fuzzy-ish scoring & prioritize title/brand; light fallback if query short
@@ -161,6 +231,7 @@ export default async function getItems(params: IItemsParams) {
         return ratio >= 0.4 ? ratio : 0; // threshold gate
       };
 
+      const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const scoreFor = (it: any) => {
         const title = (it.title || '');
         const brand = (it.brand || '');
@@ -173,7 +244,7 @@ export default async function getItems(params: IItemsParams) {
         if (title.toLowerCase().startsWith(term)) s += 140;
         if (brand.toLowerCase().startsWith(term)) s += 120;
         // Whole word boundary-ish match (simple)
-        const wordBoundary = new RegExp(`(^|\s)${term.replace(/[-/\\^$*+?.()|[\]{}]/g, '')}(?=$|\s)`, 'i');
+        const wordBoundary = new RegExp(`(^|\\s)${escapeRegExp(term)}(?=$|\\s)`, 'i');
         if (wordBoundary.test(title)) s += 40;
         if (wordBoundary.test(brand)) s += 35;
 
@@ -210,12 +281,34 @@ export default async function getItems(params: IItemsParams) {
       ranked = [...items].sort((a, b) => scoreFor(b) - scoreFor(a));
     }
 
-    const safeItems = ranked.map((item) => ({
+    // Distance filtering post-fetch (MongoDB geospatial not used directly)
+    let withDistance = ranked.map((item) => ({
       ...item,
-      createdAt: item.createdAt.toISOString(),
+      createdAt: (item.createdAt instanceof Date ? item.createdAt.toISOString() : item.createdAt),
+      distanceKm: undefined as number | undefined,
     }));
 
-    return safeItems;
+    if (params.locationLat !== undefined && params.locationLng !== undefined) {
+      const { locationLat, locationLng } = params;
+      const toRad = (d: number) => d * Math.PI / 180;
+      const R = 6371; // Earth radius km
+      const computeDistance = (lat1: number, lon1: number, lat2?: number | null, lon2?: number | null) => {
+        if (lat2 == null || lon2 == null) return undefined;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      };
+      withDistance = withDistance.map(it => {
+        const d = computeDistance(locationLat!, locationLng!, it.latitude as any, it.longitude as any);
+        return { ...it, distanceKm: d };
+      });
+      // Do NOT filter by radius here; allow caller (homepage) to split nearby vs others.
+      // Keep ranking order unless explicit sort; optional distance-based secondary sort can be applied by consumer.
+    }
+
+    return withDistance;
   } catch (error: any) {
     throw new Error(error);
   }
